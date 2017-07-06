@@ -1,0 +1,266 @@
+options 
+{STATIC = false;
+ LOOKAHEAD=4;
+ FORCE_LA_CHECK=true;
+ }
+
+
+PARSER_BEGIN(ResultParse)
+
+package elvira.parser;
+
+//import java.util.Enumeration;
+
+import java.io.*;
+import java.util.Vector;
+
+
+import elvira.Node;
+import elvira.FiniteStates;
+import elvira.NodeList;
+import elvira.Relation;
+import elvira.RelationList;
+import elvira.potential.PotentialTable;
+import elvira.Configuration;
+
+    
+public class ResultParse {
+
+
+ 
+
+ NodeList Nodes;
+ public RelationList Results;
+ 
+  
+ 
+
+
+  public static void main(String args[]) throws ParseException
+   ,IOException {
+    FileInputStream f;
+    //NodeList Nodes;
+
+    f = new FileInputStream("correct.res");    
+
+    ResultParse parser = new ResultParse(f);
+    
+      
+   
+     }
+
+  public void initialize(NodeList N) {
+   
+
+
+   Nodes = N;
+   Results=new RelationList();
+    
+   
+    }
+
+}
+
+PARSER_END(ResultParse)
+
+
+SKIP:
+{<" "|"\t"|"\n"|"\r">}
+
+SKIP:
+{<"//" (~["\n","\r"])* ("\n"|"\r\n")>}
+
+SKIP:
+{<"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">}
+
+
+TOKEN:
+{
+ <NODE: "node">|
+ <VALUES: "values">|
+ <EQUAL: "=">|
+ <TABLE: "table">|
+ <COMMENT: "comment">
+}
+
+TOKEN:
+{
+ <BOOLEAN: <TRUE> | <FALSE>>|
+ <TRUE: "true">|
+ <FALSE: "false">
+}
+
+TOKEN:
+{
+  <OPEN_PAREN: "(">
+  |
+  <CLOSE_PAREN: ")">
+  |
+  <COMMA: ",">  
+ 
+}    
+
+TOKEN:
+{
+ <DECIMAL_LITERAL: ((<DIGIT>)+)>}
+
+TOKEN:
+{<INTEGER: ("+"|"-")(<DIGIT>)+>}
+
+TOKEN:
+{
+<FLOATSCI: ("+"|"-")?
+    (<DIGIT>)+("."(<DIGIT>)*)? 
+   ("E"|"e")("+"|"-")(<DIGIT>)+>
+}
+
+TOKEN:
+{<FLOAT: ("+"|"-")?
+    (<DIGIT>)+"."(<DIGIT>)*> 
+}
+
+TOKEN:
+{
+<WORD: (~["\"","/", " " , "," , "{","}","\t","\n","[","]","(",")","=",";","|"])*
+       <LETTER>(~["\"","/", " " , "," ,"{","}","\t","\n","[","]","(",")","=",";","|"])*>
+|
+<#LETTER: ["a"-"z","A"-"Z","_"]>
+|
+<#DIGIT: ["0"-"9"]>
+}
+
+TOKEN:
+{<STRINGDECIMAL: "\""<DECIMAL_LITERAL>"\"">}
+
+TOKEN:
+{<STRING: "\""(~["\""])*"\"">}
+
+
+void CompilationUnit() :
+{}
+{
+  (RelationDeclaration())* 
+  <EOF>
+}
+
+void RelationDeclaration():
+{Token T;
+ Vector C;
+ Relation R;}
+
+{<NODE>  {R = new Relation(); C = new Vector();}
+ ListWords(C) {R.setVariablesFromNames(C,Nodes);}
+ ((";")|( RelationProperties(R) )) {Results.insertRelation(R);}
+}
+
+
+
+
+void RelationProperties(Relation R):
+{}
+{ ((RelationProperty(R)";")*)|(";") }
+
+
+
+
+
+
+
+
+void RelationProperty(Relation R):
+{Token T;}
+{<COMMENT><EQUAL>(T=<STRING>){R.setComment(T.image.substring(1,T.image.length()-1));}|
+ <VALUES><EQUAL> TableDeclaration(R)}
+
+
+
+
+
+void TableDeclaration(Relation R):
+{PotentialTable T;
+ int i;}
+{<TABLE> 
+ { T = new PotentialTable(R.getVariables()); T.setValue(-1.0);}
+  "(" (ListAssignments(T)|ListFloats(T))  ")"
+ {R.setValues(T);}
+ }
+
+
+
+
+
+
+void ListAssignments(PotentialTable T):
+{}
+{ (Assignment(T) (",")?)*   }
+
+
+
+
+
+void Assignment(PotentialTable Table):
+{Vector V;
+ Configuration C;
+ Double D;
+ Token T;}
+{ "[" (V=ListWordIntegers(Table)) "]" <EQUAL> 
+   ((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) )
+   {D= new Double(T.image);
+    C = new Configuration(Table.getVariables(), V);
+    
+    Table.setValue(C,D.doubleValue());  }
+
+}
+
+void ListFloats(PotentialTable Table):
+{Token T;
+ int i;
+ Double D;}
+{ {i=0;}(((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) )
+  {D= new Double(T.image);Table.setValue(i,D.doubleValue());i++;} 
+   (",")?)* }
+
+
+
+void ListWords(Vector C):
+{Token T;}
+
+{ ((T=<WORD>|T=<DECIMAL_LITERAL>) {System.out.println(T.toString());C.addElement(T.toString());}<COMMA> ListWords(C))|
+  ((T=<WORD>|T=<DECIMAL_LITERAL>) {C.addElement(T.toString());} ListWords(C))|
+  ((T=<WORD>|T=<DECIMAL_LITERAL>) {C.addElement(T.toString());})
+  
+  
+}
+
+
+Vector ListWordIntegers(PotentialTable Table):
+{Vector V;
+ Token T;
+ Integer I;
+ int i;
+ int j;}
+{ {V = new Vector();j=0;}
+ (
+ (
+  ((T=<DECIMAL_LITERAL>){I = new Integer(T.image);V.addElement(I);j++;})|
+  ((T=<WORD>|T=<BOOLEAN>|T=<STRING>){ i = (( FiniteStates) Table.getVariables().elementAt(j)).getId(T.image);
+             
+  I = new Integer(i);V.addElement(I);
+               j++;}  )|
+  ((T=<STRINGDECIMAL>){i = (( FiniteStates) Table.getVariables().elementAt(j)).getId(T.image.substring(1,T.image.length()-1));
+               I = new Integer(i);V.addElement(I);
+               j++;})
+ )
+ (",")?)*
+ {return(V);} }
+
+
+
+
+
+
+
+
+
+
+

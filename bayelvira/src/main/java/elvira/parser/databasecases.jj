@@ -1,0 +1,593 @@
+options 
+{
+ LOOKAHEAD=4;
+ FORCE_LA_CHECK=true;
+ STATIC = false;
+ }
+
+
+PARSER_BEGIN(DataBaseParse)
+package elvira.parser;
+
+import java.util.Vector;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.io.*;
+import elvira.Node;
+import elvira.NodeList;
+import elvira.potential.Potential;
+import elvira.potential.PotentialTable;
+import elvira.potential.PotentialTree;
+import elvira.Relation;
+import elvira.Link;
+import elvira.LinkList;
+import elvira.FiniteStates;
+import elvira.Continuous;
+import elvira.CaseList;
+import elvira.CaseListMem;
+import elvira.ContinuousCaseListMem;
+import elvira.CaseListOutMem;
+import elvira.Configuration;
+import elvira.ContinuousConfiguration;
+
+
+    
+public class DataBaseParse {
+ public String Type; 
+ public String Name;
+ public String Title;
+ public String Comment;
+ public String Author;
+ public String WhoChanged;
+ public String WhenChanged;
+ public String version;
+ public boolean locked;
+ public Hashtable networkPropertyList;
+ public Vector Consistency;
+ public NodeList Nodes;
+ public Vector Relations;
+ public FiniteStates DefaultFinite;
+ Continuous DefaultContinuous;
+ //MixedNode DefaultMixed;
+ public Relation DefaultRelation;
+ public int casesNumber;
+ public int defaultnodetype;
+ public boolean memory;
+ public boolean statesdecl;
+ 
+  
+ 
+
+
+  public static void main(String args[]) throws ParseException
+   ,IOException {
+    FileInputStream f;
+
+    f = new FileInputStream("ejemplo.dbc");    
+
+    DataBaseParse parser = new DataBaseParse(f);
+    parser.initialize();
+ 
+    parser.CompilationUnit();
+    parser.Nodes.print();
+    Relation relation = (Relation)parser.Relations.elementAt(0);
+    CaseList cases = (CaseList)relation.getValues();
+    cases.print();
+   
+    
+    
+  }
+
+  public void initialize() {
+    String DefaultStates[]= {"absent","present"};
+
+   Name =  new String("");
+   Title =  new String("");
+   Comment =  new String("");
+   Author =  new String("");
+   WhoChanged =  new String("");
+   WhenChanged =  new String("");
+   version =  new String("1.0");
+   casesNumber = 0;
+   memory = false;
+   Consistency = new Vector();
+   Nodes = new NodeList();
+   Relations = new Vector();
+   DefaultFinite = new FiniteStates("Default",DefaultStates);
+   DefaultContinuous = new Continuous();
+   DefaultContinuous.setTitle("");
+   DefaultContinuous.setComment("");   
+   DefaultRelation = new Relation();
+   DefaultRelation.setKind(Relation.CONDITIONAL_PROB);
+   DefaultFinite.setTitle("");  
+   DefaultFinite.setComment("");
+  
+//    parser.DefaultContinuous = new ContinuousNode();
+//    parser.DefaultMixed = new MixedNode();
+     defaultnodetype=1;
+ }
+
+}
+
+PARSER_END(DataBaseParse)
+
+
+SKIP:
+{<" "|"\t"|"\n"|"\r">}
+
+SKIP:
+{<"//" (~["\n","\r"])* ("\n"|"\r\n")>}
+
+SKIP:
+{<"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">}
+
+
+TOKEN:
+{
+ <DATABASE: "data-base">|
+ <TITLE: "title">|
+ <COMMENT: "comment">|
+ <AUTHOR: "author">|
+ <WHOCHANGED: "whochanged">|
+ <WHENCHANGED: "whenchanged">|
+ <VERSION: "version">|
+ <LOCKED: "locked">|
+ <CONSISTENCY: "consistency-properties">|
+ <NODE: "node">|  
+ <FINITE: "finite-states">|  
+ <CONTINUOUS: "continuous"> |
+ <NODETYPE: "type-of-variable">|  
+ <NODEKIND: "kind-of-node">|
+ <NUMSTATES: "num-states">|
+ <POSX: "pos_x">|
+ <POSY: "pos_y">|
+ <STATES: "states">|
+ <VALUES: "values">|
+ <CASES: "cases">|
+ <DEFVALUE: "default">|  
+ <EVERY: "every">|
+ <RELATION: "relation">|
+ <MEMORY: "memory">|
+ <CASESNUMBER: "number-of-cases">|
+ <MIN: "min"> |
+ <MAX: "max"> |
+ <CHANCE: "chance">|
+ <DECISION: "decision">|
+ <UTILITY: "utility">| 
+ <RELEVANCE: "relevance">|
+ <PURPOSE: "purpose">|
+ <VALUENOTDEF: "?">
+}
+
+
+TOKEN:
+{
+ <BOOLEAN: (<TRUE>|<FALSE>)>|
+ <TRUE: "true">|
+ <FALSE: "false">
+}
+
+TOKEN:
+{
+  <OPEN_PAREN: "(">
+  |
+  <CLOSE_PAREN: ")">
+  |
+  <COMMA: ",">  
+  |
+  <OPEN_COR: "[">
+  |
+  <CLOSE_COR: "]">
+}    
+
+
+TOKEN:
+{
+<PARAMETER_WORD: <WORD><OPEN_COR>(<WORD>|<INTEGER>)(<COMMA>(<WORD>|<INTEGER>))*<CLOSE_COR>>
+|
+<WORD: (~["\"","/", " " , "," , "{","}","\t","\n","[","]","(",")","=",";","|","*","+","-"])*
+       <LETTER>(~["\"","/", " " , "," ,"{","}","\t","\n","[","]","(",")","=",";","|","*","+","-"])*>
+|
+<#LETTER: ["a"-"z","A"-"Z","_"]>
+|
+<#DIGIT: ["0"-"9"]>
+}
+
+
+TOKEN:
+{
+ <DECIMAL_LITERAL: ((<DIGIT>)+)>}
+
+TOKEN:
+{<INTEGER: ("+"|"-")?(<DIGIT>)+>}
+
+TOKEN:
+{
+<FLOATSCI: ("+"|"-")?
+    (<DIGIT>)+("."(<DIGIT>)*)? 
+   ("E"|"e")("+"|"-")(<DIGIT>)+>
+}
+
+TOKEN:
+{<FLOAT: ("+"|"-")?
+    (<DIGIT>)+"."(<DIGIT>)*> 
+}
+
+TOKEN:
+{<EQUAL: "=">}
+
+TOKEN:
+{<STRINGDECIMAL: "\""<DECIMAL_LITERAL>"\"">}
+
+TOKEN:
+{<STRING: "\""(~["\""])*"\"">}
+
+
+void CompilationUnit() :
+{}
+{
+  DataBaseDeclaration() "}"
+  <EOF>
+}
+
+
+
+void DataBaseDeclaration():
+{Token T;}
+{databaseClass() (T=<WORD>|T=<STRING>){
+ Name=(T.toString());}
+ "{" databaseContent ()}
+
+
+
+
+void databaseClass():
+{}
+{ ((<DATABASE>){Type="database";})
+}
+
+void databaseContent():
+{}
+{ ((Property()|DefaultDeclaration())";")* (ElementDeclaration())* }
+
+
+
+void DefaultDeclaration():
+{Node N;}
+{ (<DEFVALUE>|<EVERY>)
+  ((<NODE> <NODETYPE> <EQUAL> (<FINITE>) {defaultnodetype=1;})|
+   (<NODE> LOOKAHEAD({defaultnodetype==1}) 
+	  (NodeProperty(DefaultFinite)|FiniteProperty(DefaultFinite)))|
+   (<NODE>"("<FINITE>")"(NodeProperty(DefaultFinite)|FiniteProperty(DefaultFinite)))|
+   (<RELATION> RelationProperty(DefaultRelation))) 
+}
+
+void Property():
+{Token T,NProp=null,VProp;}
+{ 
+  (<TITLE><EQUAL>(T=<STRING>){Title=T.image.substring(1,T.image.length()-1);})|
+  (<COMMENT><EQUAL>(T=<STRING>){Comment=T.image.substring(1,T.image.length()-1);})|
+  (<CONSISTENCY><EQUAL><OPEN_PAREN>  <CLOSE_PAREN>)| 
+  (<CONSISTENCY><EQUAL><OPEN_PAREN> ListWords(Consistency) <CLOSE_PAREN>)|
+  (<AUTHOR><EQUAL> (T=<STRING>) {Author=T.image.substring(1,T.image.length()-1);})|
+  (<WHOCHANGED><EQUAL> (T=<STRING>) {WhoChanged=T.image.substring(1,T.image.length()-1);})|
+  (<WHENCHANGED><EQUAL> (T=<STRING>) {WhenChanged=T.image.substring(1,T.image.length()-1);})|
+  (<LOCKED><EQUAL> (T=<BOOLEAN>) 
+       { if (T.image.equals("true")){locked=true;}
+         else {locked=false;}
+       })|
+ (<VERSION><EQUAL>(T=<FLOAT>){version = T.image;})| 
+ ((NProp=<WORD>)<EQUAL>(((VProp=<STRING>)|(VProp=<STRINGDECIMAL>)
+     {networkPropertyList.put(NProp.image,VProp.image);})
+                   |((VProp=<BOOLEAN>|VProp=<WORD>|VProp=<DECIMAL_LITERAL>)
+     {System.out.println("Warning: Encountered \"" +NProp.toString()+"="+VProp.toString()+"\" at line " + NProp.beginLine + ", column " + NProp.beginColumn  +". Ignoring it. These network property is not funtional yet\n");}))
+ )|
+ (<CASESNUMBER><EQUAL>(T=<DECIMAL_LITERAL>)
+     {String temporal = new
+           String(T.image.substring(0,T.image.length()));
+           try{
+              casesNumber = Integer.valueOf(temporal).intValue();
+           }catch (NumberFormatException e){
+              System.out.println(e);
+           }})
+}
+
+void NodeProperty(Node N):
+{Token T,NProp,VProp;
+ Double D;
+ }
+  {(<TITLE><EQUAL>(T=<STRING>){N.setTitle(T.image.substring(1,T.image.length()-1));})|
+  (<COMMENT><EQUAL>(T=<STRING>){N.setComment(T.image.substring(1,T.image.length()-1));})|
+ (<NODEKIND> <EQUAL> ((T=<CHANCE>)|(T=<DECISION>)|(T=<UTILITY>)){N.setKindOfNode(T.image);})|
+ (<POSX> <EQUAL> ((T=<INTEGER>)|(T=<DECIMAL_LITERAL>)){N.setPosX( Integer.valueOf(T.image).intValue() );})|
+ (<POSY> <EQUAL> ((T=<INTEGER>)|(T=<DECIMAL_LITERAL>)){N.setPosY( Integer.valueOf(T.image).intValue() );})|
+ (<RELEVANCE><EQUAL>(T=<FLOAT>){N.setRelevance(Double.valueOf(T.image).doubleValue());})|
+ (<PURPOSE><EQUAL>(T=<STRING>){N.setPurpose(T.image.substring(1,T.image.length()-1));})|
+ ((NProp=<WORD>)<EQUAL>(((VProp=<STRING>)|(VProp=<STRINGDECIMAL>)
+     {N.putProperty(NProp.image,VProp.image);}) |
+                        (VProp=<DECIMAL_LITERAL>)
+     {System.out.println("Warning: Encountered \"" +NProp.toString()+"="+VProp.toString()+"\" at line " + NProp.beginLine + ", column " + NProp.beginColumn  + ". Ignoring it. Node properties with a int value are not funtional yet\n");}
+                       )
+ )
+}
+
+void ElementDeclaration():
+{}
+{ NodeDeclaration() | RelationDeclaration()
+}
+
+void NodeDeclaration():
+{Token T;}
+{
+ <NODE> ( (T=<WORD>) | (T=<STRING>) | (T=<PARAMETER_WORD>) )
+ (DefaultNodeDeclaration(T) |
+ ("(" (FiniteDeclaration(T) |
+       ContinuousDeclaration(T))
+ )
+ )
+}
+
+void DefaultNodeDeclaration(Token T):
+{}
+{
+  LOOKAHEAD({defaultnodetype==1}) FiniteBody(T) 
+}
+
+void FiniteDeclaration(Token T):
+{
+}
+{ 
+  <FINITE>")" FiniteBody(T)
+} 
+ 
+void ContinuousDeclaration(Token T):
+{
+}
+{
+  <CONTINUOUS>")" ContinuousBody(T)
+}
+
+void FiniteBody(Token T):
+{
+FiniteStates N;
+N= (FiniteStates) DefaultFinite.copy();
+N.setName(T.image);
+}
+{ 
+ (( "{" FiniteNodeProperties(N) "}" )|(";") ){Nodes.insertNode(N);}
+}
+ 
+void ContinuousBody(Token T):
+{
+Continuous N;
+N= (Continuous) DefaultContinuous.copy();
+N.setName(T.image);
+}
+
+{
+ (( "{" ContinuousNodeProperties(N) "}" )|(";") ){Nodes.insertNode(N);}
+}
+
+void FiniteNodeProperties(Node N):
+{}
+
+{  ( (NodeProperty(N)|(FiniteProperty(N) )) (";") )* }
+
+void ContinuousNodeProperties(Continuous N):
+{}
+
+{  ( (NodeProperty(N)|(ContinuousProperty(N) )) (";") )* }
+
+
+
+void FiniteProperty(Node N):
+{Token T;
+ Vector V;
+ FiniteStates M;}
+{{M = (FiniteStates) N;}
+   (
+     <STATES><EQUAL> {V= new Vector();} "(" ListWords(V) ")"{M.setStates(V);}) |
+     (<NODETYPE> <EQUAL> (T=<FINITE>) {N.setTypeOfVariable(T.image);}|
+     (<NUMSTATES> <EQUAL> (T=<DECIMAL_LITERAL>))
+  )
+}
+
+void ContinuousProperty(Continuous N):
+{Token T;
+ Double D;}
+{  (<NODETYPE> <EQUAL> (T=<CONTINUOUS>) {N.setTypeOfVariable(T.image);}) |
+   ((<MIN><EQUAL>((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) ) {D=new Double(T.image);N.setMin(D.doubleValue());}) |
+   (<MAX><EQUAL>((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) ) {D=new Double(T.image);N.setMax(D.doubleValue());}))
+}
+
+void RelationDeclaration():
+{ 
+  Token T;
+  Vector C;
+  Relation R;
+}
+
+{<RELATION>  
+ {
+   R = new Relation();
+   R.setVariables(Nodes);
+ }
+ ((";")|("{" RelationProperties(R) "}")) {Relations.addElement(R);}
+}
+
+void RelationProperties(Relation R):
+{}
+{ ((RelationProperty(R)";")*)|(";") }
+
+void RelationProperty(Relation R):
+{Token T;}
+{<COMMENT><EQUAL>(T=<STRING>){R.setComment(T.image.substring(1,T.image.length()-1));}|
+ <MEMORY><EQUAL> (MemoryONOFF())|
+ <CASES><EQUAL> (CasesDeclaration(R))}
+
+
+void MemoryONOFF():
+{Token T;}
+{ T=<BOOLEAN> { String mem = new String(T.image.substring(0,T.image.length()));
+                       memory = Boolean.valueOf(mem).booleanValue();}
+}
+        
+
+
+void CasesDeclaration(Relation R):
+{ 
+  CaseList cases;
+  boolean relWithContinuous;
+
+  relWithContinuous=R.withContinuousVariable();
+  if(memory == true){
+    if(relWithContinuous)
+      cases = (CaseList)(new ContinuousCaseListMem(R.getVariables())); 
+    else
+      cases = (CaseList)(new CaseListMem(R.getVariables())); 
+  }
+  else {
+    String FileAux = new String(Name+"db"+".bin");
+    cases = (CaseList)(new CaseListOutMem(R.getVariables(),FileAux));
+  }
+}
+{  "(" (ListAssignments(cases,relWithContinuous))  ")"
+ {R.setValues(cases);}
+}
+
+
+void ListAssignments(CaseList cases,boolean relWithContinuous):
+{}
+{ (  (Assignment(cases,relWithContinuous) (",")?)+ (DefaultAssignment())? (Assignment(cases,relWithContinuous) (",")?)*) |
+     (DefaultAssignment()) (Assignment(cases,relWithContinuous) (",")?)*
+}
+
+
+
+void Assignment(CaseList cases,boolean relWithContinuous):
+{Vector V;
+ Configuration conf;
+ Double D;
+ Token T;}
+{ "[" (V=ListWordIntegers(cases,relWithContinuous)) "]"
+  {
+System.out.println("Tamaño del vector de casos: "+V.size());
+    if(relWithContinuous){
+      conf = new ContinuousConfiguration(cases.getVariables(), V);
+      cases.put((ContinuousConfiguration)conf);
+    }
+    else{
+      conf = new Configuration(cases.getVariables(), V);
+      cases.put(conf);  
+    }
+  }
+}
+
+Vector ListWordIntegers(CaseList cases, boolean relWithContinuous):
+{Vector V;
+ Token T;
+ Integer I;
+ Double D;
+ int i;
+ int j;}
+{ 
+ {
+   V = new Vector();
+   j=0;
+ }
+ (
+ (
+  ( (T=<DECIMAL_LITERAL>)
+    {
+      if( ((Node)cases.getVariables().elementAt(j)).getTypeOfVariable()== Node.FINITE_STATES ){
+        I = new Integer(T.image);
+        V.addElement(I);
+      }
+      else if( ((Node)cases.getVariables().elementAt(j)).getTypeOfVariable()== Node.CONTINUOUS ){
+        D = new Double(T.image);
+        V.addElement(D);
+      }
+      j++;
+    }
+  )|
+  ( ((T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>))
+    {
+      if( ((Node)cases.getVariables().elementAt(j)).getTypeOfVariable()== Node.CONTINUOUS ){
+        D = new Double(T.image);
+        V.addElement(D);
+      }
+      else{
+        throw new ParseException("Case " + T.image+ " is float for the non continuous variable "+
+                  ((FiniteStates)cases.getVariables().elementAt(j)).getName() );
+      }
+      j++;
+    }
+  )|
+  ( (T=<WORD>|T=<BOOLEAN>|T=<STRING>)
+    { 
+      if( ((Node)cases.getVariables().elementAt(j)).getTypeOfVariable()== Node.FINITE_STATES ){
+        i = ((FiniteStates)cases.getVariables().elementAt(j)).getId(T.image);
+        I = new Integer(i);
+        V.addElement(I);
+      }
+      else if( ((Node)cases.getVariables().elementAt(j)).getTypeOfVariable()== Node.CONTINUOUS ){
+        throw new ParseException("Case " + T.image+ " is a discrete value for the continuous variable "+
+                  ((Node)cases.getVariables().elementAt(j)).getName() );
+      }
+
+      j++;
+    } 
+  )|
+  ( (T=<STRINGDECIMAL>)
+    {
+      i = ((FiniteStates) cases.getVariables().elementAt(j)).getId(T.image.substring(1,T.image.length()-1));
+      if( ((Node)cases.getVariables().elementAt(j)).getTypeOfVariable()== Node.FINITE_STATES ){
+        I = new Integer(i);
+        V.addElement(I);
+      }
+      else if( ((Node)cases.getVariables().elementAt(j)).getTypeOfVariable()== Node.CONTINUOUS ){
+        throw new ParseException("Case " + T.image+ " is a discrete value for the continuous variable "+
+                  ((Node)cases.getVariables().elementAt(j)).getName() );
+      }
+
+      j++;
+    }
+  )|
+  ( (T=<VALUENOTDEF>)
+    {
+      if( ((Node)cases.getVariables().elementAt(j)).getTypeOfVariable()== Node.FINITE_STATES ){
+        I = new Integer((int)((Node)cases.getVariables().elementAt(j)).undefValue());
+        V.addElement(I);
+      }
+      else if( ((Node)cases.getVariables().elementAt(j)).getTypeOfVariable()== Node.CONTINUOUS ){
+        D = new Double(((Node)cases.getVariables().elementAt(j)).undefValue());
+        V.addElement(D);
+      }
+      j++;      
+    }
+  )
+ )
+ (",")?)*
+ {return(V);} }
+
+
+
+
+void DefaultAssignment():
+{Token T;}
+{<DEFVALUE><EQUAL>((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) )}
+
+
+
+void ListWords(Vector C):
+{Token T;}
+
+{ ((T=<WORD>|T=<STRING>|T=<BOOLEAN>|T=<DECIMAL_LITERAL>|T=<PARAMETER_WORD>) 
+  {C.addElement(T.toString());} <COMMA> ListWords(C))|
+  ((T=<WORD>|T=<STRING>|T=<BOOLEAN>|T=<DECIMAL_LITERAL>|T=<PARAMETER_WORD>) 
+  {C.addElement(T.toString());} ListWords(C))|
+  ((T=<WORD>|T=<STRING>|T=<BOOLEAN>|T=<DECIMAL_LITERAL>|T=<PARAMETER_WORD>) 
+  {C.addElement(T.toString());})
+  
+  
+}

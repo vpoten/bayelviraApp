@@ -1,0 +1,34 @@
+/AODinamicImprovedFirstBranchUID.java/1.3/Fri May 09 16:29:02 2008//
+/AODinamicImprovedRandomizedUID.java/1.3/Fri May 09 16:29:02 2008//
+/AODinamicImprovedUID.java/1.3/Fri May 09 16:29:02 2008//
+/AODinamicTailBranchesUID.java/1.1/Wed Apr 26 12:59:09 2006//
+/AODinamicTailUID.java/1.1/Wed Apr 26 12:59:09 2006//
+/AODinamicUID.java/1.3/Fri Nov 05 15:09:48 2010//
+/AOUID.java/1.3/Fri Nov 05 17:06:08 2010//
+/AOUIDCoalescenceAndConservative.java/1.2/Fri Nov 05 17:06:08 2010//
+/AOUIDLOfH.java/1.4/Fri May 09 16:29:02 2008//
+/BranchingFactor.java/1.1/Wed Apr 26 12:59:09 2006//
+/CellLogDecisionTreeUIDs.java/1.1/Fri Nov 05 15:09:48 2010//
+/DynamicInfCellLogDecisionTreeUIDs.java/1.1/Fri Nov 05 15:09:48 2010//
+/DynamicUID.java/1.2/Fri Nov 05 15:09:48 2010//
+/GSDAG.java/1.3/Fri Nov 05 15:09:48 2010//
+/GeneratorUIDs.java/1.2/Fri May 09 16:29:02 2008//
+/GraphAODinamicRandomizedUID.java/1.1/Wed Apr 26 12:59:09 2006//
+/GraphAODinamicUID.java/1.2/Fri May 09 16:29:02 2008//
+/GraphAOUID.java/1.3/Fri May 09 16:29:02 2008//
+/GraphAOUIDCoalescence.java/1.1/Fri May 09 16:29:02 2008//
+/GraphAOUIDLOfH.java/1.2/Wed Apr 26 15:38:55 2006//
+/GraphDecisionTreeUID.java/1.1/Wed Apr 26 12:59:09 2006//
+/MNode.java/1.1/Thu Apr 20 16:52:24 2006//
+/NodeAODinamicUID.java/1.2/Fri May 09 16:29:02 2008//
+/NodeAOUID.java/1.4/Fri Nov 05 15:09:48 2010//
+/NodeAOUIDCoalescence.java/1.1/Fri May 09 16:29:02 2008//
+/NodeAOUIDLOfH.java/1.2/Fri May 09 16:29:02 2008//
+/NodeDecisionTreeUID.java/1.2/Fri May 09 16:29:02 2008//
+/NodeGSDAG.java/1.3/Fri Nov 05 15:09:47 2010//
+/NodeGSDAGAndRelations.java/1.1/Fri May 09 16:29:02 2008//
+/TableLogDecisionTreeUIDs.java/1.1/Fri Nov 05 15:09:48 2010//
+D/Anytime////
+D/AnytimeUpdKAdmissBreadthSearch////
+D/AnytimeUpdatingK////
+D/AnytimeUpdatingKAdmiss////

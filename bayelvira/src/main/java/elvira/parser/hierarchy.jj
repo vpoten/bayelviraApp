@@ -1,0 +1,176 @@
+options
+
+{STATIC = false;
+LOOKAHEAD=3;
+ FORCE_LA_CHECK=true;
+
+ }
+
+
+
+PARSER_BEGIN(HierarchyParse)
+
+package elvira.parse;
+
+
+
+import elvira.Node;
+
+import elvira.NodeList;
+
+import elvira.FiniteStates;
+import elvira.Hierarchy;
+
+
+import java.io.*;
+
+
+public class HierarchyParse {
+
+Hierarchy h;
+
+
+ public void initialize(FiniteStates ref) {
+   
+h = new Hierarchy(ref);   
+
+
+    }
+}
+
+PARSER_END(HierarchyParse)
+
+
+SKIP:
+{<" "|"\t"|"\n"|"\r">}
+
+SKIP:
+{<"//" (~["\n","\r"])* ("\n"|"\r\n")>}
+
+SKIP:
+{<"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">}
+
+
+TOKEN:
+{
+ <HIERARCHY: "Hierarchy">|
+ <NAME: "name">|  
+ <REFERENCE: "reference">|
+ <TYPE: "type">|
+ <HIERARCHYC: "Hierarchyc">|
+ <VALUES: "values">
+}
+
+
+
+
+TOKEN:
+{
+  <OPEN_PAREN: "(">
+  |
+  <CLOSE_PAREN: ")">
+  |
+  <COMMA: ",">  
+  |
+  <OPEN_COR: "[">
+  |
+  <CLOSE_COR: "]">
+}    
+
+
+TOKEN:
+{
+<PARAMETER_WORD: <WORD><OPEN_COR>(<WORD>|<INTEGER>)(<COMMA>(<WORD>|<INTEGER>))*<CLOSE_COR>>
+|
+<WORD: (~["\"","/", " " , "," , "{","}","\t","\n","[","]","(",")","=",";","|","*","+","-"])*
+       <LETTER>(~["\"","/", " " , "," ,"{","}","\t","\n","[","]","(",")","=",";","|","*","+","-"])*>
+|
+<#LETTER: ["a"-"z","A"-"Z","_"]>
+|
+<#DIGIT: ["0"-"9"]>
+}
+
+
+TOKEN:
+{
+ <DECIMAL_LITERAL: ((<DIGIT>)+)>}
+
+TOKEN:
+{<INTEGER: ("+"|"-")?(<DIGIT>)+>}
+
+
+TOKEN:
+{<EQUAL: "=">}
+
+TOKEN:
+{<STRINGDECIMAL: "\""<DECIMAL_LITERAL>"\"">}
+
+TOKEN:
+{<STRING: "\""(~["\""])*"\"">}
+
+
+void CompilationUnit() :
+{}
+{
+  HierarchyDeclaration(h) "}"
+  <EOF>
+}
+
+void HierarchyDeclaration(Hierarchy hl):
+{}
+{
+<HIERARCHY>  "{"
+PropertyList(hl) "(" ChildrenList(hl) ")" 
+
+}
+
+void PropertyList(Hierarchy hl):
+{}
+{
+(Name(hl)|Values(hl))*
+
+}
+
+
+void Name(Hierarchy hl):
+{Token T;}
+{
+<NAME><EQUAL>(T=<STRING>){hl.setName(T.image);}";"
+}
+
+
+void Values(Hierarchy hl):
+{Token T;
+ int i,n;}
+{
+<VALUES><EQUAL>(T=<DECIMAL_LITERAL>){
+n = hl.getVar().getNumStates();
+for(i=0;i<n;i++) {
+if (T.image.charAt(i) =='1') {
+hl.getMembers()[i] = true;
+}
+else {hl.getMembers()[i] = false;}
+
+   }
+  }
+";"
+}
+
+
+void ChildrenList(Hierarchy hl):
+{}
+{
+ (Child(hl))*
+}
+
+
+
+void Child(Hierarchy hl):
+{Hierarchy hc;
+  hc = new Hierarchy(hl.getVar());}
+{
+  HierarchyDeclaration(hc) "}"
+ {hl.addChild(hc);} 
+}
+
+

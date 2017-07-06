@@ -1,0 +1,467 @@
+options
+{STATIC = false;
+ LOOKAHEAD=4;
+ FORCE_LA_CHECK=true;
+ }
+
+
+PARSER_BEGIN(Bif2ElvParse)
+
+package elvira.translator.bif2elv;
+
+import java.util.Vector;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import elvira.Node;
+import elvira.NodeList;
+import elvira.FiniteStates;
+import elvira.Continuous;
+import elvira.Configuration;
+import elvira.potential.*;
+import elvira.Relation;
+import elvira.Link;
+import elvira.LinkList;
+import elvira.Bnet;
+import java.io.*;
+
+    
+public class Bif2ElvParse {
+ public String Type; 
+ public String Name;
+ public String Title;
+ public String Comment;
+ public String Author;
+ public String WhoChanged;
+ public String WhenChanged;
+ public String version;
+ public boolean locked;
+ public Hashtable NodeDefaultProperties;
+ public Hashtable RelationDefaultProperties;
+ public Vector Consistency;
+ public NodeList Nodes;
+ public LinkList Links;
+ public Vector Relations;
+ public FiniteStates DefaultFinite;
+ public Continuous DefaultContinuous;
+ //MixedNode DefaultMixed;
+ public Relation DefaultRelation;
+ public Link DefaultLink;
+ public int defaultnodetype;
+ public boolean statesdecl;
+ 
+  
+ 
+
+
+  public static void main(String args[]) throws ParseException
+   ,IOException {
+   Bnet b;
+   FileInputStream networkFile;
+   FileWriter networkOutputFile;
+   
+   if (args.length<2)
+     System.out.println("Too few arguments. Arguments are: BifFile ElviraFile");
+   else {
+     networkFile = new FileInputStream(args[0]);
+     Bif2ElvParse parser = new Bif2ElvParse(networkFile);
+     parser.initialize();
+
+     parser.CompilationUnit();
+     b=new Bnet();
+     b.translate(parser);
+     networkOutputFile= new FileWriter(args[1]);
+     b.saveBnet(networkOutputFile);
+     networkOutputFile.close();     
+   }
+  }
+
+  public void initialize() {
+    String DefaultStates[]= {"absent","present"};
+
+   Name =  new String("");
+   Title =  new String("");
+   Comment =  new String("");
+   Author =  new String("");
+   WhoChanged =  new String("");
+   WhenChanged =  new String("");
+   version =  new String("1.0");
+
+   Consistency = new Vector();
+    Nodes = new NodeList();
+    Links = new LinkList();
+    Relations = new Vector();
+    DefaultFinite = new FiniteStates("Default",DefaultStates);
+    DefaultContinuous = new Continuous();
+    DefaultContinuous.setTitle("");
+    DefaultContinuous.setComment("");
+    DefaultRelation = new Relation();
+    DefaultRelation.setKind(Relation.CONDITIONAL_PROB);
+    DefaultFinite.setTitle("");
+    DefaultFinite.setComment("");
+    DefaultLink = new Link(true);
+
+//    parser.DefaultContinuous = new ContinuousNode();
+//    parser.DefaultMixed = new MixedNode();
+     defaultnodetype=1;
+ }
+
+
+}
+
+PARSER_END(Bif2ElvParse)
+
+
+SKIP:
+{<" "|"\t"|"\n"|"\r">}
+
+SKIP:
+{<"//" (~["\n","\r"])* ("\n"|"\r\n")>}
+
+SKIP:
+{<"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">}
+
+TOKEN:
+{
+ <NETWORK: "network">|
+ <TYPE: "type">|
+ <VARIABLE: "variable">|
+ <DISCRETE: "discrete">|
+ <PARENTS: "parents">|
+ <BELIEF: "belief">|
+ <PROBABILITY: "probability">|
+ <PROPERTY: "property">|
+ <LABEL: "label">|
+ <POSITION: "position">|
+ <TITLE: "title">|
+ <COMMENT: "comment">|
+ <NODEKIND: "kind">|
+ <TABLE: "table">|
+ <DISPLAYSIZE: "displaySize">
+}
+
+TOKEN:
+{
+  <OPEN_PAREN: "(">
+  |
+  <CLOSE_PAREN: ")">
+  |
+  <COMMA: ",">  
+  |
+  <OPEN_COR: "[">
+  |
+  <CLOSE_COR: "]">
+  |
+  <BAR: "|">
+}    
+
+
+
+TOKEN:
+{
+ <DECIMAL_LITERAL: ((<DIGIT>)+)>}
+
+TOKEN:
+{<INTEGER: ("+"|"-")(<DIGIT>)+>}
+
+TOKEN:
+{
+<FLOATSCI: ("+"|"-")?
+    (<DIGIT>)+("."(<DIGIT>)*)? 
+   ("E"|"e")("+"|"-")(<DIGIT>)+>
+}
+
+TOKEN:
+{<FLOAT: ("+"|"-")?
+    (((<DIGIT>)+"."(<DIGIT>)*)|("."(<DIGIT>)+))> 
+}
+
+TOKEN:
+{
+<WORD: (~["\"","/", " " , "," , "{","}","\t","\n","[","]","(",")","=",";","|"])*
+       <LETTER>(~["\"","/", " " , "," ,"{","}","\t","\n","[","]","(",")","=",";","|"])*>
+|
+<#LETTER: ["a"-"z","A"-"Z","_"]>
+|
+<#DIGIT: ["0"-"9"]>
+}
+
+TOKEN:
+{<EQUAL: "=">}
+
+TOKEN:
+{<STRINGDECIMAL: "\""<DECIMAL_LITERAL>"\"">}
+
+TOKEN:
+{<STRING: "\""(~["\""])*"\"">}
+
+
+void CompilationUnit() :
+{}
+{
+  (ElementDeclaration() (";")?)*
+  <EOF>
+}
+
+
+void ElementDeclaration():
+{}
+{ NetworkDeclaration()|
+  NodeDeclaration()|
+  ProbabilityDeclaration() 
+}
+
+void NetworkDeclaration():
+{Token T;}
+{<NETWORK> ((T=<WORD>)|(T=<STRING>)){
+ Name=(T.toString());}
+ "{" NetworkContent() "}"}
+
+
+void NetworkContent():
+{}
+{ ( NetworkProperty() ";")*  }
+
+
+void NetworkProperty():
+{Token T;}
+{ 
+   <PROPERTY> 
+        (
+          (<DISPLAYSIZE> <EQUAL> "(" <DECIMAL_LITERAL> "," <DECIMAL_LITERAL> ")" ) |
+          (<WORD> <EQUAL> ( <DECIMAL_LITERAL> | <INTEGER> |<FLOAT> | <FLOATSCI> | <STRING> | <STRINGDECIMAL> | <WORD>)) |
+          (<STRING>)
+        )
+}
+
+
+
+
+
+void NodeDeclaration():
+{Token T;}
+{
+ <VARIABLE> ((T=<WORD>)|(T=<STRING>)) FiniteBody(T)
+}
+
+void FiniteBody(Token T):
+{
+FiniteStates N;
+N= (FiniteStates) DefaultFinite.copy();
+N.setName(T.image);
+}
+{ 
+ ( "{" NodeProperties(N) "}" ){Nodes.insertNode(N);}
+}
+
+void NodeProperties(FiniteStates M):
+{}
+{  
+  (NodeProperty(M) ";" )* 
+}
+
+
+void NodeProperty(FiniteStates N):
+{Token T;
+ Double D;
+ Vector V;
+ }
+{
+(<NODEKIND> <WORD>)|
+(<TYPE> <DISCRETE>  {V= new Vector();} "[" (T=<DECIMAL_LITERAL>) "]" 
+          (<EQUAL>)?
+          "{" 
+          ListWords(V) {N.setStates(V);}  
+          "}"      ) |
+(<PARENTS> "(" ( ({V= new Vector();} ListWords(V) ")" ) |( ")") )) | 
+(<TITLE> ((T=<STRING>)| (T=<STRINGDECIMAL>)){N.setTitle(T.image.substring(1,T.image.length()-1));})|
+(<BELIEF> "(" {PotentialTable PT = new PotentialTable(N); } ListFloats(PT,0)) ")" |
+(<COMMENT>( (T=<STRING>)|(T=<STRINGDECIMAL>)){N.setComment(T.image.substring(1,T.image.length()-1));})|
+(<PROPERTY> (
+              (<LABEL> <EQUAL>((T=<STRING>)|(T=<STRINGDECIMAL>))) | 
+              (<POSITION><EQUAL> "(" ((T=<INTEGER>)|(T=<DECIMAL_LITERAL>))
+                    {N.setPosX( Integer.valueOf(T.image).intValue() );}
+                                 "," ((T=<INTEGER>)|(T=<DECIMAL_LITERAL>))
+                    {N.setPosY( Integer.valueOf(T.image).intValue() );}
+                                 ")"  
+              )|
+              (<WORD> <EQUAL> ( ("(" {Vector C=new Vector();} ListWords(C) ")") |  <DECIMAL_LITERAL> | <INTEGER> |<FLOAT> | <FLOATSCI> | <STRING>| <STRINGDECIMAL> | <WORD>)) |
+              (T=<STRING>)
+            )
+) }
+
+
+
+void ProbabilityDeclaration() : 
+{ Vector C;
+ Relation R;
+ Token T;
+}
+{
+  <PROBABILITY> {R = DefaultRelation.copy(); 
+                 C = new Vector();
+                }
+ "(" (T=<WORD>|T=<DECIMAL_LITERAL>|T=<STRING>) 
+                {C.addElement(T.toString());} 
+  ( (<BAR> ListWords(C)) | ListWords(C) )?
+{
+  int i;
+  Link K=null;
+  for(i=1;i<C.size();i++) {
+    K = new Link(true);
+System.out.println("Enlace de "+ (String)(C.elementAt(i))+" a "+(String)(C.elementAt(0)));
+    K.setTail (Nodes.getNode((String)(C.elementAt(i))));
+    K.setHead (Nodes.getNode((String)(C.elementAt(0))));
+    Links.insertLink(K);
+  } 
+}
+ ")"
+                { R.setVariablesFromNames(C,Nodes);}
+ ((";")|("{" 
+           RelationProperties(R) 
+          "}")) 
+                {Relations.addElement(R);}
+}
+
+void RelationProperties(Relation R):
+{}
+{ ((RelationProperty(R))+)|(";") 
+}
+
+void RelationProperty(Relation R):
+{Token T;
+ Potential pot;
+}
+{
+  (<COMMENT><EQUAL>((T=<STRING>)|(T=<STRINGDECIMAL>)))
+         {R.setComment(T.image.substring(1,T.image.length()-1));} |
+  (pot=TableDeclaration(R))
+         {R.setValues(pot);} 
+}
+
+PotentialTable TableDeclaration(Relation R):
+{PotentialTable T;
+ int i;}
+{
+ { T = new PotentialTable(R.getVariables()); 
+T.setValue(-1.0);}
+     (ListAssignments(T)|(<TABLE> ListFloats(T,0)) ";")  
+  {return T;}
+ }
+
+void ListAssignments(PotentialTable T):
+{
+Vector conf=new Vector(T.getVariables().size());
+Integer I=new Integer(0);
+conf.add(0,I);
+}
+{   (Assignment(T,conf) ";" {conf.setElementAt(I,0);})+    }
+
+
+void Assignment(PotentialTable Table,Vector conf):
+{
+Vector V;
+int i;
+}
+{ 
+  "(" (V=ListWordIntegers(Table)) ")"
+{
+  for(i=0;i<V.size();i++)
+  {
+    conf.add(i+1,V.get(i));
+  }
+}
+ (ListFloatsConf(Table,conf))
+}
+
+void ListFloats(PotentialTable Table,int i):
+{Token T;
+// int i=0;
+ Double D;}
+{ 
+  ((T=<FLOAT>) | (T=<FLOATSCI>) | (T=<INTEGER>) | (T=<DECIMAL_LITERAL>))
+  {
+  D= new Double(T.image);
+  Table.setValue(i,D.doubleValue());
+  i++;
+  }
+  ((<COMMA> ListFloats(Table,i)) | ListFloats(Table,i))?
+}
+
+void ListFloatsConf(PotentialTable Table,Vector conf):
+{Token T;
+ int i=0;
+ Double D;
+ Configuration C;
+}
+{ 
+  ((T=<FLOAT>) | (T=<FLOATSCI>) | (T=<INTEGER>) | (T=<DECIMAL_LITERAL>))
+  {
+  D= new Double(T.image);
+  C = new Configuration(Table.getVariables(), conf);
+  Table.setValue(C,D.doubleValue());
+  i++;
+  }
+  ("," ((T=<FLOAT>) | (T=<FLOATSCI>) | (T=<INTEGER>) | (T=<DECIMAL_LITERAL>))
+  {
+  D= new Double(T.image);
+  C.putValue((FiniteStates)(Table.getVariables().elementAt(0)),i);
+
+  Table.setValue(C,D.doubleValue());
+  i++;
+  }
+  )*  
+}
+
+void ListWords(Vector C):
+{Token T;}
+
+{ (
+     ((T=<WORD>|T=<DECIMAL_LITERAL>|T=<STRING>) 
+         {C.addElement(T.toString());} 
+         (<COMMA> (ListWords(C)) | ListWords(C)   )? ) 
+  )  
+}
+
+Vector ListWordIntegers(PotentialTable Table):
+{
+Vector V;
+ Token T;
+ Integer I;
+ int i;
+ int j;}
+{ {
+V = new Vector();
+j=1;}
+ (
+ (
+   ((T=<DECIMAL_LITERAL>)
+      {i = (( FiniteStates) Table.getVariables().elementAt(j)).getId(T.image);
+      I = new Integer(i);V.addElement(I);
+      j++;})|
+   ((T=<WORD>)
+      { 
+      i = (( FiniteStates) Table.getVariables().elementAt(j)).getId(T.image);
+      I = new Integer(i);V.addElement(I);
+      j++;}  )|
+   ((T=<STRINGDECIMAL>)
+      {i = (( FiniteStates) Table.getVariables().elementAt(j)).getId(T.image.substring(1,T.image.length()-1));
+       I = new Integer(i);V.addElement(I);
+       j++;}))(","
+ )?)*
+ {return(V);} }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

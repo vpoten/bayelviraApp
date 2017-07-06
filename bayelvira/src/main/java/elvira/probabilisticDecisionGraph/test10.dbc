@@ -1,0 +1,67 @@
+// Data Base. Elvira Format
+
+data-base test {
+number-of-cases = 10;
+
+
+// Network Variables 
+
+node X0(finite-states) {
+title = "titleX0";
+kind-of-node = chance;
+type-of-variable = finite-states;
+relevance = 7.0;
+purpose = "";
+num-states = 3;
+states = (X00 X01 X02);
+}
+
+node X2(finite-states) {
+title = "titleX2";
+kind-of-node = chance;
+type-of-variable = finite-states;
+relevance = 7.0;
+purpose = "";
+num-states = 3;
+states = (X20 X21 X22);
+}
+
+node X1(finite-states) {
+title = "titleX1";
+kind-of-node = chance;
+type-of-variable = finite-states;
+relevance = 7.0;
+purpose = "";
+num-states = 3;
+states = (X10 X11 X12);
+}
+
+node X3(finite-states) {
+title = "titleX3";
+kind-of-node = chance;
+type-of-variable = finite-states;
+relevance = 7.0;
+purpose = "";
+num-states = 2;
+states = (X30 X31);
+}
+
+relation  {
+
+memory = true;
+
+cases = (
+[ 2, 2, 2, 1 ]
+[ 1, 0, 2, 1 ]
+[ 1, 0, 1, 1 ]
+[ 1, 0, 2, 1 ]
+[ 1, 0, 1, 1 ]
+[ 0, 0, 2, 1 ]
+[ 0, 0, 1, 1 ]
+[ 2, 2, 2, 0 ]
+[ 0, 0, 2, 1 ]
+[ 1, 0, 1, 1 ]
+);
+
+}
+}

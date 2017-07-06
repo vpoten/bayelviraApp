@@ -1,0 +1,2796 @@
+options
+
+{STATIC = false;
+
+ FORCE_LA_CHECK=true;
+
+ }
+
+
+
+
+
+PARSER_BEGIN(BayesNetParse)
+
+
+
+package elvira.parser;
+
+
+
+import java.util.Vector;
+
+import java.util.Enumeration;
+
+import java.util.Hashtable;
+
+import elvira.Node;
+
+import elvira.NodeList;
+
+import elvira.FiniteStates;
+
+import elvira.Continuous;
+
+import elvira.Configuration;
+
+import elvira.potential.*;
+
+import elvira.Relation;
+
+import elvira.Link;
+
+import elvira.LinkList;
+
+import elvira.ValuesSet;
+
+import elvira.LogicalNode;
+
+import elvira.tools.LinearFunction;
+import elvira.tools.QuadraticFunction;
+import java.io.*;
+
+import elvira.sensitivityAnalysis.GeneralizedPotentialTable;//Introducido por jruiz
+
+
+
+
+
+public class BayesNetParse {
+
+ public String Type;
+
+ public String Name;
+
+ public String KindOfGraph;
+
+ public String Title;
+
+ public String Comment;
+
+ public String Author;
+
+ public String WhoChanged;
+
+ public String WhenChanged;
+
+ public String VisualPrecision;
+
+ public String version;
+
+ public boolean locked;
+
+ public Hashtable networkPropertyList;
+
+ public Hashtable NodeDefaultProperties;
+
+ public Hashtable RelationDefaultProperties;
+
+ public Vector Consistency;
+
+ public NodeList Nodes;
+
+ public LinkList Links;
+
+ public Vector Relations;
+
+ public FiniteStates DefaultFinite;
+
+ public Continuous DefaultContinuous;
+
+ //MixedNode DefaultMixed;
+
+ public Relation DefaultRelation;
+
+ public Link DefaultLink;
+
+ public int defaultnodetype;
+
+ public boolean statesdecl;
+
+ public ValuesSet DefaultValuesSet;
+
+
+
+
+
+
+
+
+
+  public static void main(String args[]) throws ParseException
+
+   ,IOException {
+
+    FileInputStream f;
+
+
+
+    f = new FileInputStream("ejemplo.elv");
+
+
+
+    BayesNetParse parser = new BayesNetParse(f);
+
+    parser.initialize();
+
+
+
+    parser.CompilationUnit();
+
+
+
+
+
+
+
+  }
+
+
+
+  public void initialize() {
+
+    String DefaultStates[]= {"absent","present"};
+
+
+
+   Name =  new String("");
+
+   KindOfGraph =  null;
+
+   Title =  new String("");
+
+   Comment =  new String("");
+
+   Author =  new String("");
+
+   WhoChanged =  new String("");
+
+   WhenChanged =  new String("");
+
+   version =  new String("1.0");
+
+   networkPropertyList=new Hashtable();
+
+
+
+   Consistency = new Vector();
+
+    Nodes = new NodeList();
+
+    Links = new LinkList();
+
+    Relations = new Vector();
+
+    DefaultFinite = new FiniteStates("Default",DefaultStates);
+
+    DefaultContinuous = new Continuous();
+
+    DefaultContinuous.setTitle("");
+
+    DefaultContinuous.setComment("");
+
+    DefaultRelation = new Relation();
+
+    DefaultRelation.setKind(Relation.CONDITIONAL_PROB);
+
+    DefaultFinite.setTitle("");
+
+    DefaultFinite.setComment("");
+
+    DefaultLink = new Link(true);
+
+
+
+//    parser.DefaultContinuous = new ContinuousNode();
+
+//    parser.DefaultMixed = new MixedNode();
+
+     defaultnodetype=1;
+
+ }
+
+
+
+}
+
+
+
+PARSER_END(BayesNetParse)
+
+
+
+
+
+SKIP:
+
+{<" "|"\t"|"\n"|"\r">}
+
+
+
+SKIP:
+
+{<"//" (~["\n","\r"])* ("\n"|"\r\n")>}
+
+
+
+SKIP:
+
+{<"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">}
+
+
+
+
+
+TOKEN:
+
+{
+
+ <GRAPH: "graph">|
+
+ <NETWORK: "network">|
+
+ <IDIAGRAM : "idiagram"> |
+
+ <IDWITHSVNODES : "id-with-svnodes"> |
+ 
+ <DAN : "dan"> |
+ 
+ <UID : "uid"> |
+
+ <BNET: "bnet">|
+
+ <TITLE: "title">|
+
+ <KINDOFGRAPH: "kindofgraph">|
+
+ <COMMENT: "comment">|
+
+ <AUTHOR: "author">|
+
+ <WHOCHANGED: "whochanged">|
+
+ <WHENCHANGED: "whenchanged">|
+
+ <VISUALPRECISION: "visualprecision">|
+
+ <VERSION: "version">|
+
+ <LOCKED: "locked">|
+
+ <CONSISTENCY: "consistency-properties">|
+
+ <NODE: "node">|
+
+ <FINITE: "finite-states">|
+
+ <CONTINUOUS: "continuous"> |
+
+ <LINK: "link">|
+
+ <RELATION: "relation">|
+
+ <DETERMINISTIC: "deterministic">|
+
+ <HENRIONVSDIEZ: "henrionVSdiez">|
+
+ <NODETYPE: "type-of-variable">|
+
+ <NODEKIND: "kind-of-node">|
+
+ <NUMSTATES: "num-states">|
+
+ <UNIT: "unit">|
+
+ <POSX: "pos_x">|
+
+ <POSY: "pos_y">|
+
+ <STATES: "states">|
+
+ <VALUES: "values">|
+
+ <TABLE: "table">|
+
+ <TABLEINTERVAL: "table-interval">|
+
+ <TREE: "tree">|
+
+ <TREEINTERVAL: "tree-interval">|
+
+ <CONTINUOUS_TREE: "continuous-tree">|
+
+ <CONVEXSET: "convex-set">|
+
+ <CREDALSETTREE: "credal-set-tree">|
+
+ <CASE: "case">|
+
+ <DEFVALUE: "default">|
+
+ <DEFINTERVALVALUE: "default-interval">|
+ 
+ <DEFINTERVALVALUES: "default-intervals">|
+
+ <DIRECTED: "directed">|
+
+ <EVERY: "every">|
+
+ <ACTIVE: "active">|
+
+ <FUNCTION: "function">|
+
+ <RELATIONNAME: "name-of-relation">|
+
+ <RELATIONKIND: "kind-of-relation"> |
+
+ <EXP: "exp">|
+
+ <MIN: "min"> |
+
+ <MAX: "max"> |
+
+ <CHANCE: "chance">|
+
+ <DECISION: "decision">|
+ 
+ <OBSERVED: "observed">|
+
+ <UTILITY: "utility">|
+
+ <SUPER_VALUE: "super-value">|
+ 
+ <POTENTIAL: "potential">|
+
+ <CONDITIONAL_PROB: "conditional-prob">|
+
+ <UTILITY_COMBINATION: "utility-combination"> |
+
+ <RELEVANCE: "relevance">|
+
+ <PURPOSE: "purpose">    |
+
+ <CONSTRAINT: "constraint"> |
+
+ <LOGICALEXPRESSION: "logical-expression"> |
+
+ <GAUSS: "Gauss"> |
+
+ <IN: "in"> |
+
+ <AND: "&"> |
+
+ <OR: "|"> |
+
+ <IMPLICATION: "->"> |
+
+ <DOUBLEIMPLICATION: "<->"> |
+
+ <NOT: "!"> |
+ 
+ <REVELATION_ARC: "revelation-arc" |
+ 
+ <CONSTRAINT_ARC: "constraint-arc">
+
+}
+
+
+//Introducido por jruiz
+TOKEN:
+{
+<RANGE: "range">
+}
+
+TOKEN:
+{
+<GENERALIZEDTABLE: "generalizedTable">
+}
+//Fin introducido por jruiz
+
+
+TOKEN:
+{
+
+ <BOOLEAN: <TRUE> | <FALSE>>|
+
+ <#TRUE: "true">|
+
+ <#FALSE: "false">
+
+}
+
+
+
+TOKEN:
+
+{
+
+  <OPEN_PAREN: "(">
+
+  |
+
+  <CLOSE_PAREN: ")">
+
+  |
+
+  <COMMA: ",">
+
+  |
+
+  <OPEN_COR: "[">
+
+  |
+
+  <CLOSE_COR: "]">
+
+}
+
+
+
+TOKEN:
+
+{
+
+ <DECIMAL_LITERAL: ((<DIGIT>)+)>}
+
+
+
+TOKEN:
+
+{<INTEGER: ("+"|"-")(<DIGIT>)+>}
+
+
+
+TOKEN:
+
+{
+
+<FLOATSCI: ("+"|"-")?
+
+    (<DIGIT>)+("."(<DIGIT>)*)?
+
+   ("E"|"e")("+"|"-")?(<DIGIT>)+>
+
+}
+
+
+
+TOKEN:
+
+{<FLOAT: ("+"|"-")?
+
+    (<DIGIT>)+"."(<DIGIT>)*>
+
+}
+
+//Introducido por jruiz
+TOKEN:
+{
+<COMODIN: "#">
+}
+//Fin introducido por jruiz
+
+TOKEN:
+
+{
+
+<PARAMETER_WORD: <WORD><OPEN_COR>(<WORD>|<INTEGER>)(<COMMA>(<WORD>|<INTEGER>))*<CLOSE_COR>>
+
+|
+
+<WORD: (~["\"","/", " " , "," , "{","}","\t","\n","[","]","(",")","=",";","|","*","+","-","!","^"])*
+
+       <LETTER>(~["\"","/", " " , "," ,"{","}","\t","\n","[","]","(",")","=",";","|","*","+","-","!","^"])*>
+
+|
+
+<#LETTER: ["a"-"z","A"-"Z","_"]>
+
+|
+
+<#DIGIT: ["0"-"9"]>
+
+}
+
+
+
+
+
+TOKEN:
+
+{<EQUAL: "=">}
+
+
+
+TOKEN:
+
+{<STRINGDECIMAL: "\""<DECIMAL_LITERAL>"\"">}
+
+
+
+TOKEN:
+
+{<STRING: "\""(~["\""])*"\"">}
+
+
+TOKEN:
+{<SQUARE: "^"(" ")*"2">}
+
+
+void CompilationUnit() :
+
+{}
+
+{
+
+  NetworkDeclaration()
+
+  <EOF>
+
+}
+
+
+
+
+
+
+
+void NetworkDeclaration():
+
+{Token T;}
+
+{NetworkClass() (T=<WORD>|T=<STRING>){
+
+ Name=(T.toString());}
+
+ "{" NetworkContent () "}"}
+
+
+
+
+
+
+
+
+
+void NetworkClass():
+
+{}
+
+{ ((<GRAPH>){Type="graph";})|
+
+ ((<NETWORK>){Type="network";})|
+
+ ((<BNET>){Type="bnet";})	|
+
+ ((<IDIAGRAM>){Type="iDiagram";})|
+
+ ((<IDWITHSVNODES>){Type="iDWithSVNodes";})|
+ 
+ ((<DAN>){Type="dan";})|
+ 
+ ((<UID>) {Type="uid";})
+ 
+
+}
+
+
+
+void NetworkContent():
+
+{}
+
+{ ((Property()|DefaultDeclaration())";" | ElementDeclaration())*  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+void DefaultDeclaration():
+
+{Node N;}
+
+{ (<DEFVALUE>|<EVERY>)
+
+  (LOOKAHEAD(3) (<NODE> <NODETYPE> <EQUAL> (<FINITE>) {defaultnodetype=1;})|
+
+   LOOKAHEAD(3)(<NODE> LOOKAHEAD({defaultnodetype==1})
+
+	  (NodeProperty(DefaultFinite)|FiniteProperty(DefaultFinite)))|
+
+   (<NODE> <NODETYPE> <EQUAL> (<CONTINUOUS>) {defaultnodetype=2;})|
+
+ LOOKAHEAD(3)  (<NODE> LOOKAHEAD({defaultnodetype==2})
+
+	  (NodeProperty(DefaultContinuous)|ContinuousProperty(DefaultContinuous)))|
+
+   LOOKAHEAD(3)(<NODE>"("<FINITE>")"(NodeProperty(DefaultFinite)|FiniteProperty(DefaultFinite)))|
+
+   (<NODE>"("<CONTINUOUS>")"(NodeProperty(DefaultContinuous)|ContinuousProperty(DefaultContinuous)))|
+
+   (<RELATION> RelationProperty(DefaultRelation)))
+
+}
+
+
+
+
+
+
+
+void Property():
+
+{Token T,NProp=null,VProp;}
+
+
+
+{
+
+  (<TITLE><EQUAL>(T=<STRING>){Title=T.image.substring(1,T.image.length()-1);})|
+
+  (<COMMENT><EQUAL>(T=<STRING>){Comment=T.image.substring(1,T.image.length()-1);})|
+
+ LOOKAHEAD(3) (<CONSISTENCY><EQUAL><OPEN_PAREN>  <CLOSE_PAREN>)|
+
+  (<CONSISTENCY><EQUAL><OPEN_PAREN> ListWords(Consistency) <CLOSE_PAREN>)|
+
+  (<AUTHOR><EQUAL> (T=<STRING>) {Author=T.image.substring(1,T.image.length()-1);})|
+
+  (<WHOCHANGED><EQUAL> (T=<STRING>) {WhoChanged=T.image.substring(1,T.image.length()-1);})|
+
+  (<WHENCHANGED><EQUAL> (T=<STRING>) {WhenChanged=T.image.substring(1,T.image.length()-1);})|
+
+  (<KINDOFGRAPH><EQUAL> (T=<STRING>) {KindOfGraph=T.image.substring(1,T.image.length()-1);})|
+
+  (<LOCKED><EQUAL> (T=<BOOLEAN>)
+
+       { if (T.image.equals("true")){locked=true;}
+
+         else {locked=false;}
+
+       })|
+
+ (<VERSION><EQUAL>(T=<FLOAT>){version = T.image;})|
+
+ (<VISUALPRECISION><EQUAL>(T=<STRING>) {VisualPrecision=T.image.substring(1,T.image.length()-1);})|
+
+ ((NProp=<WORD>)<EQUAL>(((VProp=<STRING>)|(VProp=<STRINGDECIMAL>)
+
+     {networkPropertyList.put(NProp.image,VProp.image);})
+
+                   |((VProp=<BOOLEAN>|VProp=<WORD>|VProp=<DECIMAL_LITERAL>)
+
+     {//System.out.println("Warning: Encountered \"" +NProp.toString()+"="+VProp.toString()+"\" at line " + NProp.beginLine + ", column " + NProp.beginColumn  +". Ignoring it. These network property is not funtional yet\n");
+     }))
+
+ )
+
+}
+
+
+
+
+
+
+
+
+
+
+
+void ElementDeclaration():
+
+{}
+
+{ NodeDeclaration()|
+
+  LinkDeclaration()|
+
+  RelationDeclaration()
+
+}
+
+
+
+
+
+void NodeDeclaration():
+
+{Token T;}
+
+{
+
+ <NODE> ( (T=<WORD>) | (T=<STRING>) | (T=<PARAMETER_WORD>) )
+
+ (DefaultNodeDeclaration(T) |
+
+ ("(" (FiniteDeclaration(T) |
+
+       ContinuousDeclaration(T))
+
+ )
+
+ )
+
+}
+
+
+
+void DefaultNodeDeclaration(Token T):
+
+{}
+
+{
+
+  LOOKAHEAD({defaultnodetype==1}) FiniteBody(T) |
+
+  LOOKAHEAD({defaultnodetype==2}) ContinuousBody(T)
+
+}
+
+
+
+void FiniteDeclaration(Token T):
+
+{
+
+}
+
+{
+
+  <FINITE>")" FiniteBody(T)
+
+}
+
+
+
+void ContinuousDeclaration(Token T):
+
+{
+
+}
+
+{
+
+  <CONTINUOUS>")" ContinuousBody(T)
+
+}
+
+
+
+
+
+void FiniteBody(Token T):
+
+{
+
+FiniteStates N;
+
+N= (FiniteStates) DefaultFinite.copy();
+
+N.setName(T.image);
+
+}
+
+
+
+{
+
+ (( "{" FiniteNodeProperties(N) "}" )|(";") ){Nodes.insertNode(N);}
+
+}
+
+
+
+void ContinuousBody(Token T):
+
+{
+
+Continuous N;
+
+N= (Continuous) DefaultContinuous.copy();
+
+N.setName(T.image);
+
+}
+
+
+
+{
+
+ (( "{" ContinuousNodeProperties(N) "}" )|(";") ){Nodes.insertNode(N);}
+
+}
+
+
+
+
+
+
+
+void FiniteNodeProperties(Node N):
+
+{}
+
+
+
+{  ( (NodeProperty(N)|(FiniteProperty(N) )) (";") )* }
+
+
+
+
+
+void ContinuousNodeProperties(Continuous N):
+
+{}
+
+
+
+{  ( (NodeProperty(N)|(ContinuousProperty(N) )) (";") )* }
+
+
+
+
+
+void NodeProperty(Node N):
+
+{Token T,NProp,VProp;
+
+ Double D;
+
+ }
+
+  {(<TITLE><EQUAL>(T=<STRING>){N.setTitle(T.image.substring(1,T.image.length()-1));})|
+
+  (<COMMENT><EQUAL>(T=<STRING>){N.setComment(T.image.substring(1,T.image.length()-1));})|
+
+ (<NODEKIND> <EQUAL> ((T=<CHANCE>)|(T=<OBSERVED>)|(T=<DECISION>)|(T=<UTILITY>)|(T=<SUPER_VALUE>)){N.setKindOfNode(T.image);})|
+
+ (<POSX> <EQUAL> ((T=<INTEGER>)|(T=<DECIMAL_LITERAL>)){N.setPosX( Integer.valueOf(T.image).intValue() );})|
+
+ (<POSY> <EQUAL> ((T=<INTEGER>)|(T=<DECIMAL_LITERAL>)){N.setPosY( Integer.valueOf(T.image).intValue() );})|
+
+ (<RELEVANCE><EQUAL>(T=<FLOAT>){N.setRelevance(Double.valueOf(T.image).doubleValue());})|
+
+ (<PURPOSE><EQUAL>(T=<STRING>){N.setPurpose(T.image.substring(1,T.image.length()-1));})|
+
+ ((NProp=<WORD>)<EQUAL>(((VProp=<STRING>)|(VProp=<STRINGDECIMAL>)
+
+     {N.putProperty(NProp.image,VProp.image);}) |
+
+                        (VProp=<DECIMAL_LITERAL>)
+
+     {//System.out.println("Warning: Encountered \"" +NProp.toString()+"="+VProp.toString()+"\" at line " + NProp.beginLine + ", column " + NProp.beginColumn  + ". Ignoring it. Node properties with a int value are not funtional yet\n");
+     }
+
+                       )
+
+ )
+
+}
+
+
+
+void FiniteProperty(Node N):
+
+{Token T;
+
+ Vector V;
+
+ FiniteStates M;}
+
+{{M = (FiniteStates) N;}
+
+   (
+
+     <STATES><EQUAL> {V= new Vector();} "(" ListWords(V) ")"{M.setStates(V);}) |
+
+     (<NODETYPE> <EQUAL> (T=<FINITE>) {N.setTypeOfVariable(T.image);}|
+
+     (<NUMSTATES> <EQUAL> (T=<DECIMAL_LITERAL>))
+
+  )
+
+}
+
+
+
+void ContinuousProperty(Continuous N):
+
+{Token T;
+
+ Double D;
+
+ String S;}
+
+{  (<NODETYPE> <EQUAL> (T=<CONTINUOUS>) {N.setTypeOfVariable(T.image);}) |
+
+   ((<MIN><EQUAL>((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) ) {D=new Double(T.image);N.setMin(D.doubleValue());}) |
+
+   (<MAX><EQUAL>((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) ) {D=new Double(T.image);N.setMax(D.doubleValue());}) |
+
+   (<UNIT><EQUAL>(T=<STRING>)) {S=new String(T.image);N.setUnit(S);})
+
+}
+
+
+
+
+
+void LinkDeclaration():
+
+{Token T; Link K; Node P;}
+
+{<LINK> {K = new Link(true);}
+
+ ((  ((T=<WORD>)|(T=<STRING>)) { K.setTail (Nodes.getNode(T.image));})|
+
+ ((T=<PARAMETER_WORD>) {K.setTail (Nodes.getNode(T.image));}))
+
+ (( ((T=<WORD>)| (T=<STRING>)) { K.setHead (Nodes.getNode(T.image));})|
+
+ ((T=<PARAMETER_WORD>) {K.setHead (Nodes.getNode(T.image));}))
+
+ (( "{" LinkProperties(K) "}" )|(";") )
+
+ {Links.insertLink(K);}
+
+}
+
+
+
+
+
+void LinkProperties(Link K):
+
+{}
+
+
+
+{  ( LinkProperty(K) (";") )* }
+
+
+
+void LinkProperty(Link K):
+
+{Token T;}
+
+
+
+{
+
+
+
+  (<DIRECTED> <EQUAL> (T=<BOOLEAN>)
+
+      {if(T.image.equals("true")) { K.setDirected(true);}
+
+       else {K.setDirected(false);}
+
+      }
+
+  )
+
+    |
+
+  (<COMMENT><EQUAL>(T=<STRING>){K.setComment(T.image.substring(1,T.image.length()-1));})
+
+
+
+}
+
+
+
+void RelationDeclaration():
+
+{Token T;
+
+ Vector C;
+
+ Relation R;
+
+}
+
+
+
+{<RELATION>  {R = DefaultRelation.copy(); C = new Vector();}
+
+ ListWords(C) {
+
+   R.setVariablesFromNames(C,Nodes);
+
+   if(R.withUtilityNode())
+
+   {
+
+    //R.setVariables(R.chanceAndDecisionNodesUtilityRelationOfUtilityRelation());
+
+    R.setKind(R.UTILITY);
+
+   }
+    
+
+ }
+
+ ((";")|("{" RelationProperties(R) "}")) {Relations.addElement(R);}
+
+}
+
+
+
+
+void RelationProperties(Relation R):
+
+{}
+
+{ ((RelationProperty(R)";")+)|(";") }
+
+
+
+//Modificado por jruiz
+void RelationProperty(Relation R):
+
+{Token T;
+
+ Potential pot=null;
+
+Relation Final=null;
+
+}
+
+{ (<COMMENT><EQUAL>(T=<STRING>){R.setComment(T.image.substring(1,T.image.length()-1));} |
+
+  <VALUES><EQUAL> (
+
+                  {
+
+                    //if(R.getKind()==Relation.UTILITY)
+
+                      //Final=DefaultRelation.copy();
+
+                      //Final.setVariables(R.getParents());
+
+                      //Final.setKind(Relation.UTILITY);
+
+                    //}
+
+                    //else
+
+                      Final=R;
+
+                  }
+
+                  (pot=TableDeclaration(Final) |
+
+                  pot=GeneralizedTableDeclaration(Final) |
+
+                  pot=IntervalTableDeclaration(Final) |
+
+                  pot=TreeDeclaration(Final)|
+
+                  pot=IntervalTreeDeclaration(Final)|
+
+                  pot=ConvexSetDeclaration(Final)|
+
+                  pot=ConvexSetTreeDeclaration(Final)|
+
+                  pot=FunctionDeclaration(Final)|
+
+                  pot=ContinuousTreeDeclaration(Final) |
+
+                  pot=ConstraintDeclaration(Final)) {R.setValues(pot);}) |
+
+<ACTIVE><EQUAL>(T=<BOOLEAN>){if (T.image.equals("false")){R.setActive(false);}}|
+
+<DETERMINISTIC><EQUAL>(T=<BOOLEAN>)
+
+{
+
+  if (T.image.equals("true"))
+
+    R.setDeterministic(true);
+
+  else
+
+    R.setDeterministic(false);
+
+}|
+
+<RELATIONNAME><EQUAL>(T=<WORD>){R.setName(T.image);}|
+
+<RELATIONKIND><EQUAL>((T=<POTENTIAL>)|(T=<CONDITIONAL_PROB>)|(T=<UTILITY>)|(T=<CONSTRAINT>)|(T=<UTILITY_COMBINATION>))
+{ 
+  //if (!((String) T.image).equals("utility-combination"))
+  //{
+    R.setKind((String)(T.image));
+  //}
+  //else R.setKind("Sum");
+
+}|
+
+<HENRIONVSDIEZ><EQUAL>(T=<STRING>){
+	if (R.getValues().getClass() == CanonicalPotential.class) {
+		if (((CanonicalPotential) R.getValues()).getFunction().getName().equals("Or") ||
+			((CanonicalPotential) R.getValues()).getFunction().getName().equals("CausalMax")) {
+		  ((CanonicalPotential) R.getValues()).setHenrionVSDiez(T.image.substring(1,T.image.length()-1));
+		}
+	}
+})
+
+{ if (R.getComment().equals("new")) { R.setComment("");}}
+
+}
+
+
+
+
+Potential ConstraintDeclaration(Relation R):
+
+{Token T;
+
+ Vector C;
+
+ Vector LN;
+
+ LogicalExpression LE;
+
+}
+
+
+
+{<LOGICALEXPRESSION>  {LE=new LogicalExpression();}
+
+    ("(" ConstraintBody(LE) ")") {return (Potential)LE;}
+
+}
+
+
+Potential RevelationArcDeclaration(Relation R):
+
+{Token T;
+
+ Vector C;
+
+ Vector LN;
+
+ //LogicalExpression LE;
+
+}
+
+
+
+{<REVELATION_ARC>  {LE=new LogicalExpression();}
+
+    ("(" ConstraintBody(LE) ")") {return (Potential)LE;}
+
+}
+
+
+
+
+Potential FunctionDeclaration(Relation R):
+
+{ Token Q;
+
+  Potential F;
+
+}
+
+{<FUNCTION>
+
+   (Q=<WORD>) {if (((String) Q.image).equals("Or") ||
+		    ((String) Q.image).equals("CausalMax") ||
+		    ((String) Q.image).equals("GeneralizedMax") ||
+		    ((String) Q.image).equals("And") ||
+		    ((String) Q.image).equals("Min") ||
+		    ((String) Q.image).equals("Xor")) {
+		F = new CanonicalPotential(R.getVariables());
+	        ((CanonicalPotential) F).setFunction(Q.image);
+		R.setKind((String) Q.image);
+   }
+   else if (((String) Q.image).equals("Sum") ||
+		    ((String) Q.image).equals("Product"))
+        {
+		F = new UtilityPotential(R.getParents());
+                ((UtilityPotential) F).setFunction(Q.image);
+		//R.setKind((String) Q.image);
+                
+
+        }
+   else {
+    F = new PotentialFunction(R.getVariables());
+    ((PotentialFunction) F).setFunction(Q.image);}}
+
+   "(" ((ArgumentInclusion(F) (",")? )*) ")"
+
+   {return F;}
+
+}
+
+
+
+
+
+void ArgumentInclusion(Potential F):
+
+{ Token Q;
+
+  Double D;}
+
+{ (Q=<FLOAT>) {D=new Double(Q.image);
+  ((PotentialFunction) F).addArgument(D.doubleValue());}|
+
+  (Q=<WORD>)
+     {((PotentialFunction) F).addArgument(Q.image);} }
+
+
+
+PotentialTable TableDeclaration(Relation R):
+
+{PotentialTable T;
+
+ int i;}
+
+{<TABLE>
+
+ { if (R.getKind()==Relation.UTILITY) T = new PotentialTable(R.chanceAndDecisionNodesOfUtilityRelation());
+   else T = new PotentialTable(R.getVariables());
+   T.setValue(-1.0);}
+
+    "(" (ListAssignments(T)|ListFloats(T))  ")"
+
+  {return T;}
+
+ }
+
+void ListFloats(PotentialTable Table):
+
+{Token T;
+
+ int i;
+
+ Double D;}
+
+{ {i=0;}(((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) )
+
+  {D= new Double(T.image);Table.setValue(i,D.doubleValue());i++;}
+
+   (",")?)* }
+
+
+//Introducido por jruiz
+PotentialTable GeneralizedTableDeclaration(Relation R):
+
+{GeneralizedPotentialTable T;
+
+ int i;}
+
+{<GENERALIZEDTABLE>
+
+ { if (R.getKind()==Relation.UTILITY) T = new GeneralizedPotentialTable(R.chanceAndDecisionNodesOfUtilityRelation());
+   else T = new GeneralizedPotentialTable(R.getVariables());
+   T.setValue(-1.0);T.setRange(null);T.setName(null);}
+
+    "(" (ListGeneralizedValues(T))  ")"
+
+  {if (R.getKind()!=Relation.UTILITY) T.complementValues();
+   return T;}
+
+ }
+
+PotentialIntervalTable IntervalTableDeclaration(Relation R):
+{
+ PotentialTable Min=null;
+ PotentialTable Max=null;
+ PotentialIntervalTable intervalTable;
+ Vector defaults=new Vector();
+ double defMin, defMax;
+ int defCont;
+ int i;
+}
+
+{
+   <TABLEINTERVAL>
+
+      {
+        Min = new PotentialTable(R.getVariables());
+        Min.setValue(-1.0);
+        Max = new PotentialTable(R.getVariables());
+        Max.setValue(-1.0);
+      }
+
+   "("
+      // The intervals maybe defined using configurations or
+      // without them
+
+      (
+        ConfIntervalTableDeclaration(Min,Max,defaults)
+
+        |
+
+        PosIntervalTableDeclaration(Min,Max,defaults)
+      )
+   ")"
+
+      {
+         intervalTable=new PotentialIntervalTable(Min,Max);
+
+         // Look if it is requiered to add default values
+
+         if (defaults.size() != 0){
+            intervalTable.setDefaultValues(defaults);
+            defaults.removeAllElements();
+         }
+ 
+         return intervalTable;
+      }
+ }
+
+
+PTreeCredalSet ConvexSetTreeDeclaration(Relation R):
+{
+  PTreeCredalSet pTreeCredalSet;
+}
+{
+  <CREDALSETTREE> "("
+
+  {
+    // Create a new PTreeCredalSet with the set of variables used for
+    // the relation
+
+    pTreeCredalSet=new PTreeCredalSet((R.getVariables()).getNodes());
+  }
+   
+  // Now the specification for the tree
+
+  BodyConvexSetTree(pTreeCredalSet,pTreeCredalSet.getTree())
+
+  // At the end, the final ")"
+
+  ")"
+
+  {
+    return pTreeCredalSet;
+  }
+}
+
+
+PotentialConvexSet ConvexSetDeclaration(Relation R):
+{PotentialConvexSet CS;
+ PotentialTable table;
+ Vector C;
+}
+{
+  <CONVEXSET>
+    {
+     C=new Vector();
+    }
+  "("
+  ( table=TableDeclaration(R)
+    {C.addElement(table);}
+  )+
+
+  ")"
+    {CS=new PotentialConvexSet(R.getVariables(),C);
+     //R.setVariables(CS.getVariables());
+     return CS;
+    }
+
+}
+
+void ListAssignments(PotentialTable T):
+{}
+{ (  (Assignment(T) (",")?)+ (DefaultAssignment())? (Assignment(T) (",")?)*) |
+     (DefaultAssignment()) (Assignment(T) (",")?)*   
+}
+
+
+void Assignment(PotentialTable Table):
+
+{Vector V;
+
+ Configuration C;
+
+ Double D;
+
+ Token T;}
+
+{ "[" (V=ListWordIntegers(Table)) "]" <EQUAL>
+
+   ((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) )
+
+   {D= new Double(T.image);
+
+    C = new Configuration(Table.getVariables(), V);
+
+    Table.setValue(C,D.doubleValue());  }
+
+}
+
+
+void ConfIntervalTableDeclaration(PotentialTable min, PotentialTable max,Vector defaults):
+{
+}
+{
+   // In this case, the default interval value may be anywhere: at the
+   // beginning, at the middle or at the end. Anywhere, it will be only
+   // a default value that will be assigned to the whole set of configurations
+   // without explicit value assigned
+
+   (
+     InitialDefConfIntervalTableDeclaration(min,max,defaults)
+
+     |
+
+     NonInitialDefConfIntervalTableDeclaration(min,max,defaults)
+   )
+}
+
+void InitialDefConfIntervalTableDeclaration(PotentialTable min, PotentialTable max,Vector defaults):
+{
+}
+{
+   // The declaration of the default interval will be at the beginning. After
+   // it may be any number of interval related to configurations
+
+   DefaultIntervalAssignment(defaults)
+
+   // After that, a set of intervals related to configurations. Perhaps 0
+
+   (ConfIntervalAssignment(min,max))*
+}
+
+void NonInitialDefConfIntervalTableDeclaration(PotentialTable min, PotentialTable max, Vector defaults):
+{
+}
+{
+   // Must be a set of intervals defined through configurations (at least one)
+
+   (ConfIntervalAssignment(min,max))+
+
+   // Now may be the default declaration
+
+   (DefaultIntervalAssignment(defaults))?
+
+   // Now, a set of intervals definitions (may be 0)
+
+   (ConfIntervalAssignment(min,max))*
+}
+
+void ConfIntervalAssignment(PotentialTable TableMin, PotentialTable TableMax):
+
+{Vector V;
+ Configuration C;
+ Double Min;
+ Double Max;
+ Token T;
+ Vector values;
+}
+
+{
+   // The declaration begins with the specification of the
+   // configuration
+
+   "[" (V=ListWordIntegers(TableMin)) "]" <EQUAL> 
+
+   // Now will be specified one or two values for the interval 
+      
+   values=IntervalValues()
+   {
+      C=new Configuration(TableMin.getVariables(),V);
+      TableMin.setValue(C,((Double)values.elementAt(0)).doubleValue());
+      TableMax.setValue(C,((Double)values.elementAt(1)).doubleValue());
+   }
+
+}
+
+//Introducido por jruiz
+void ListGeneralizedValues(GeneralizedPotentialTable Table):
+{
+int i;
+}
+{
+	{i=0;}
+	(
+	GeneralizedValue(Table,i)
+	(",")?
+	{i++;}
+	)*
+}
+
+//Introducido por jruiz
+void GeneralizedValue(GeneralizedPotentialTable Table, int i):
+{
+Token T;
+Token T1;
+Double D;
+String P;
+}
+{
+	(<COMODIN>{Table.setValue(i,Double.NaN);Table.setRange(i,Double.NaN,Double.NaN);Table.setName(i,null);}
+	|
+	((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>))
+	{D=new Double(T.image);Table.setValue(i,D.doubleValue());}	
+	(<OR>RangeDeclaration(Table,i))?
+	(<OR>(T1=<STRING>)
+	{P=new String(T1.image);Table.setName(i,P);}
+	)?
+	)
+}
+
+//Introducido por jruiz
+void RangeDeclaration(GeneralizedPotentialTable Table,int i):
+{
+Token T;
+Token T1;
+Double M;
+Double N;
+double m=Double.NaN;
+double n=Double.NaN;
+}
+{
+	<RANGE>
+	"("
+	((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>))
+	{M=new Double(T.image);m=M.doubleValue();}
+	","
+	((T1=<DECIMAL_LITERAL>)|(T1=<INTEGER>)|(T1=<FLOAT>)|(T1=<FLOATSCI>))
+	{N=new Double(T1.image);n=N.doubleValue();}
+	")"
+	{Table.setRange(i,m,n);}
+}
+
+
+
+void PosIntervalTableDeclaration(PotentialTable min, PotentialTable max,Vector defaults):
+{
+}
+{
+   // In this case, the default interval value may be anywhere: at the
+   // beginning, at the middle or at the end. Anywhere, it will be only
+   // a default value that will be assigned to the whole set of configurations
+   // without explicit value assigned
+
+   InitialDefPosIntervalTableDeclaration(min,max,defaults)
+
+   |
+
+   NonInitialDefPosIntervalTableDeclaration(min,max,defaults)
+}
+
+void InitialDefPosIntervalTableDeclaration(PotentialTable min, PotentialTable max,Vector defaults):
+{
+   int initialDefPos=0,finalDefPos=0;
+   int posCounter=0;
+}
+{
+   // The declaration of the default interval will be at the beginning. It is
+   // required to specify the number of positions that will have this value 
+
+   (DefaultIntervalAssignments(defaults)
+   {
+      initialDefPos=0;
+      finalDefPos=((Integer)defaults.elementAt(defaults.size()-1)).intValue()-1;
+      defaults.removeElementAt(defaults.size()-1);
+      posCounter=finalDefPos+1;
+   }
+   )
+
+   // After that, a set of intervals related to configurations. Perhaps 0
+
+   (PosIntervalAssignment(min,max,posCounter) 
+   {
+      posCounter++;
+   })*
+
+   {
+      // At the end, insert initialDefPos in defaults vector
+
+      if (defaults.size() != 0){
+        defaults.addElement(new Integer(initialDefPos));
+        defaults.addElement(new Integer(finalDefPos));
+      }
+   }
+}
+
+void NonInitialDefPosIntervalTableDeclaration(PotentialTable min, PotentialTable max, Vector defaults):
+{
+   int initialDefPos=0,finalDefPos=0;
+   int posCounter=0;
+}
+{
+   // Must be a set of intervals defined through configurations (at least one)
+
+   (PosIntervalAssignment(min,max,posCounter) 
+   {
+      initialDefPos++;
+      posCounter++;
+   }
+   )+
+
+   (
+     // Now may be the default declaration. It is required to specify 
+     // the number of positions that wil have this default value
+
+     (DefaultIntervalAssignments(defaults)
+     {
+        // The last position of defaults will contain the number of positions
+        // related to the default value
+
+        finalDefPos=((Integer)defaults.elementAt(defaults.size()-1)).intValue()-1;
+        defaults.removeElementAt(defaults.size()-1);
+        finalDefPos=initialDefPos+finalDefPos;
+        posCounter=finalDefPos+1;
+     }
+     )?
+
+     // Now, a set of intervals definitions (perhaps 0)
+
+     (PosIntervalAssignment(min,max,posCounter))+ 
+     {
+        posCounter++;
+     }
+
+     |
+
+     // Or the last declaration is the one related to the default value
+     // In this case there is no need to specify the amount of default
+     // intervals to assign
+
+     (DefaultIntervalAssignment(defaults)
+     {
+        finalDefPos=(int)min.getSize()-1;
+     }
+     )?
+   )
+
+   {
+      // At the end, insert initialDefPos in defaults vector
+
+      if (defaults.size() != 0){
+        defaults.addElement(new Integer(initialDefPos));
+        defaults.addElement(new Integer(finalDefPos));
+      }
+   }
+}
+
+
+void PosIntervalAssignment(PotentialTable TableMin,PotentialTable TableMax, int pos):
+
+{Token T;
+ Double D;
+ Vector values;
+}
+
+{
+   // The intervals are specified one by one, without configurations
+
+   values=IntervalValues()
+   {
+      TableMin.setValue(pos,((Double)values.elementAt(0)).doubleValue());
+      TableMax.setValue(pos,((Double)values.elementAt(1)).doubleValue());
+   }
+
+   // Una coma opcional
+
+   (",")?
+}
+
+
+void FloatsToVector(Vector C):
+
+{Token T;
+
+ Double D;}
+
+{ (((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) )
+
+  {D= new Double(T.image);C.addElement(D);}
+
+   (",")?)* }
+
+
+
+
+
+Vector ListWordIntegers(PotentialTable Table):
+
+{Vector V=new Vector();
+
+ Token T;
+
+ Integer I;
+
+ int i;
+
+ int j;}
+
+{ {V = new Vector();j=0;}
+
+ (
+
+ (
+
+  ((T=<DECIMAL_LITERAL>){I = new Integer(T.image);V.addElement(I);j++;})|
+
+  ((T=<WORD>|T=<BOOLEAN>|T=<STRING>){ i = (( FiniteStates) Table.getVariables().elementAt(j)).getId(T.image);
+
+
+
+  I = new Integer(i);V.addElement(I);
+
+               j++;}  )|
+
+  ((T=<STRINGDECIMAL>){i = (( FiniteStates) Table.getVariables().elementAt(j)).getId(T.image.substring(1,T.image.length()-1));
+
+               I = new Integer(i);V.addElement(I);
+
+               j++;})
+
+ )
+
+ (",")?)*
+
+ {return(V);} }
+
+
+
+
+
+
+
+
+
+
+
+void DefaultAssignment():
+
+{Token T;}
+
+{<DEFVALUE><EQUAL>((T=<DECIMAL_LITERAL>)|(T=<INTEGER>)|(T=<FLOAT>)|(T=<FLOATSCI>) )}
+
+
+
+void DefaultIntervalAssignment(Vector defaults):
+
+{Token T;
+ Double Min;
+ Double Max;
+ Vector values;
+}
+{
+
+   <DEFINTERVALVALUE> <EQUAL>
+    
+   // As a default interval may be a pair of values or only one
+
+   values=IntervalValues()
+
+   {
+      defaults.addElement(values.elementAt(0));
+      defaults.addElement(values.elementAt(1));
+   }
+}
+
+
+void DefaultIntervalAssignments(Vector defaults):
+{
+ Token T;
+ Double Min;
+ Double Max;
+ Integer Cont;
+ Vector values;
+}
+{
+   <DEFINTERVALVALUES> "(" 
+
+    ((T=<DECIMAL_LITERAL>)|(T=<INTEGER>))
+        {
+           Cont = new Integer(T.image);
+        }
+ 
+   ")"
+   
+   <EQUAL>
+    
+   // As a default interval may be a pair of values or only one
+
+   values=IntervalValues()
+      
+   {
+      defaults.addElement(values.elementAt(0));
+      defaults.addElement(values.elementAt(1));
+      defaults.addElement(Cont);
+   }
+
+}
+
+
+
+
+
+PotentialTree TreeDeclaration(Relation R):
+
+{PotentialTree T;
+
+ ProbabilityTree T2;}
+
+{<TREE>
+
+ {T = new PotentialTree(R.getVariables());T2 = T.getTree();}
+
+"(" BodyTree(T2)  ")"
+
+{T.updateSize(); return T;}
+
+}
+
+
+
+PotentialIntervalTree IntervalTreeDeclaration(Relation R):
+
+{PotentialTree Min;
+ PotentialTree Max;
+ PotentialIntervalTree pIntervalTree;
+ ProbabilityTree TMin;
+ ProbabilityTree TMax;
+}
+
+{<TREEINTERVAL>
+
+ {Min = new PotentialTree(R.getVariables());
+  Max = new PotentialTree(R.getVariables());
+  TMin = Min.getTree();
+  TMax = Max.getTree();}
+
+"(" IntervalTreeSpecification(TMin,TMax) ")"
+
+{
+ Min.updateSize(); 
+ Max.updateSize();
+ pIntervalTree=new PotentialIntervalTree(Min,Max);
+ return pIntervalTree;
+}
+}
+
+
+
+
+
+PotentialContinuousPT ContinuousTreeDeclaration(Relation R):
+
+{PotentialContinuousPT T;
+
+ ContinuousProbabilityTree T2;}
+
+{<CONTINUOUS_TREE>
+
+ {T = new PotentialContinuousPT(R.getVariables());T2 = T.getTree();}
+
+"(" BodyContinuousTree(T2)  ")"
+
+{ return T;}
+
+}
+
+
+
+
+
+void BodyContinuousTree(ContinuousProbabilityTree T):
+
+{}
+
+{ FinalCT(T)|ExpansionCT(T) }
+
+
+
+
+
+void FinalCT(ContinuousProbabilityTree T):
+
+{MixtExpDensity D;}
+
+{{D = new MixtExpDensity(0.0);} DensityDeclaration(D) ";" {T.assignProb(D);}}
+
+
+
+
+
+
+
+void ExpansionCT(ContinuousProbabilityTree T):
+
+
+
+{Token Q;
+
+ Node V;
+
+Vector C;
+
+
+
+}
+
+
+
+{
+
+    <CASE>  ( (Q=<WORD>)|(Q=<STRING>) )
+
+       {V =  Nodes.getNode(Q.image); }
+
+                 (("(" {C = new Vector();}
+
+                  FloatsToVector(C) ")"
+
+                 {T.assignVar((Continuous) V, C);}
+
+                "{" ListContinuousOptions(T) "}")|
+
+               ({T.assignVar( (FiniteStates ) V);
+               
+                 }
+
+                "{" ListDiscreteOptions(T) "}"))
+
+
+
+
+
+}
+
+
+
+
+
+void BodyTree(ProbabilityTree T):
+
+{Token Q;
+
+ FiniteStates V;
+
+ }
+
+{( (  ((Q=<DECIMAL_LITERAL>)|(Q=<INTEGER>)|(Q=<FLOAT>)|(Q=<FLOATSCI>) ){ T.assignProb(Double.valueOf(Q.image).doubleValue());
+
+}  ";")
+
+  | (<CASE>  ((Q=<WORD>)|(Q=<STRING>))
+
+       {V = (FiniteStates) Nodes.getNode(Q.image);
+
+        T.assignVar(V); }
+
+     "{"  ListOptions(T) "}"  ))}
+
+
+
+void IntervalTreeSpecification(ProbabilityTree TreeMin, ProbabilityTree TreeMax):
+
+{Token Q;
+ FiniteStates V;
+ Vector values;
+ Double Max;
+ Double Min;
+}
+
+{
+  // Leaf node: distinguish between intervals given by a single value
+  // (the same for max and min) or a pair of values 
+
+  
+  ( 
+    values=IntervalValues() 
+    { 
+     TreeMin.assignProb(((Double)values.elementAt(0)).doubleValue());
+     TreeMax.assignProb(((Double)values.elementAt(1)).doubleValue());
+    }
+  )
+
+  |
+
+  // For non leaf nodes the name of the variable an the states have
+  // to be specified
+  
+  (<CASE>  ((Q=<WORD>)|(Q=<STRING>))
+  {
+     // Read the name of the variable
+
+     V = (FiniteStates) Nodes.getNode(Q.image);
+     TreeMin.assignVar(V);
+     TreeMax.assignVar(V);
+  }
+
+  "{"  
+ 
+  // Now the specification of the internal nodes of the tree
+
+  ListIntervalOptions(TreeMin,TreeMax) "}"  
+  
+  )
+}
+
+
+void BodyConvexSetTree(PTreeCredalSet pTreeCredalSet,ProbabilityTree pTree):
+{
+ Token Q;
+ FiniteStates V;
+}
+
+{
+  // Here may be the specification of a table of values for a given
+  // configuration for the parent variables. There must be a number
+  // of values equal to the number of alternatives for the first
+  // variable. Or may be the specification of a branch in the tree
+
+     "{" ExtremePointsDeclaration(pTreeCredalSet,pTree) "}" 
+
+  |
+
+    // The specification of the value for a variable, defining a 
+    // branch in the tree
+
+    (
+       <CASE>  ((Q=<WORD>)|(Q=<STRING>))
+
+       {
+         V = (FiniteStates) Nodes.getNode(Q.image);
+         pTree.assignVar(V); 
+       }
+
+       // Now keep on reading the rest of the tree
+
+       "{"  ExtremeOptions(pTreeCredalSet,pTree) "}"  
+    )
+}
+  
+
+void ListOptions(ProbabilityTree T):
+
+{}
+
+{ (Option(T) )*(DefaultAssignment()";")?(Option(T) )* }
+
+
+void ListIntervalOptions(ProbabilityTree Min, ProbabilityTree Max):
+{
+}
+{
+  (IntervalOption(Min,Max) )*
+}
+
+void ExtremeOptions(PTreeCredalSet pTreeCredalSet,ProbabilityTree pTree):
+{
+}
+{
+  (ExtremeOption(pTreeCredalSet,pTree))*
+}
+
+
+
+void ListContinuousOptions(ContinuousProbabilityTree T):
+
+{}
+
+{ (ContinuousOption(T))* }
+
+
+
+
+
+void ListDiscreteOptions(ContinuousProbabilityTree T):
+
+{}
+
+{ (DiscreteOption(T))* }
+
+
+
+
+
+
+
+void DiscreteOption(ContinuousProbabilityTree T):
+
+{Token Q;
+
+ int i;
+
+ ContinuousProbabilityTree T2;}
+
+{
+
+  (
+  ((Q=<DECIMAL_LITERAL>)
+  	{i = Integer.parseInt(Q.image); T2 = (ContinuousProbabilityTree) T.getChild(i); })
+  	|
+  ((Q=<WORD>|Q=<STRING>|Q=<BOOLEAN>)
+  	{i = ((FiniteStates)T.getVar()).getId(Q.image); T2 = (ContinuousProbabilityTree) T.getChild(i); })
+  	|
+  ((Q=<STRINGDECIMAL>)
+  	{i = ((FiniteStates)T.getVar()).getId(Q.image.substring(1,Q.image.length()-1)); T2 = (ContinuousProbabilityTree) T.getChild(i); })
+  )
+
+    <EQUAL> BodyContinuousTree(T2)
+
+}
+
+
+
+void ContinuousOption(ContinuousProbabilityTree T):
+
+{Token Q;
+
+ int i;
+
+ ContinuousProbabilityTree T2;}
+
+
+
+{
+
+ (Q=<DECIMAL_LITERAL>)
+
+ {i = (new Integer(Q.image)).intValue();
+
+ T2 = (ContinuousProbabilityTree) T.getChild(i); }
+
+   <EQUAL> BodyContinuousTree(T2)
+
+
+
+}
+
+
+
+
+
+void Option(ProbabilityTree T):
+
+{Token Q;
+
+ int i;
+
+ ProbabilityTree T2;}
+
+{
+
+  (
+  ((Q=<DECIMAL_LITERAL>)
+  	{i = Integer.parseInt(Q.image); T2 = (ProbabilityTree) T.getChild().elementAt(i); })
+  	|
+  ((Q=<WORD>|Q=<STRING>|Q=<BOOLEAN>)
+  	{i = T.getVar().getId(Q.image); T2 = (ProbabilityTree) T.getChild().elementAt(i); })
+  	|
+  ((Q=<STRINGDECIMAL>)
+  	{i = T.getVar().getId(Q.image.substring(1,Q.image.length()-1)); T2 = (ProbabilityTree) T.getChild().elementAt(i); })
+  )
+
+    <EQUAL> BodyTree(T2)
+
+}
+
+
+void IntervalOption(ProbabilityTree TreeMin, ProbabilityTree TreeMax):
+
+{Token Q;
+
+ int i;
+ ProbabilityTree Min;
+ ProbabilityTree Max;}
+
+{
+
+  ((Q=<WORD>)|(Q=<STRING>)|(Q=<BOOLEAN>)|(Q=<DECIMAL_LITERAL>))
+
+  {
+    i = TreeMin.getVar().getId(Q.image); 
+    Min = (ProbabilityTree) TreeMin.getChild().elementAt(i); 
+    Max = (ProbabilityTree) TreeMax.getChild().elementAt(i);
+  }
+
+    <EQUAL> IntervalTreeSpecification(Min,Max)
+
+}
+
+void ExtremeOption(PTreeCredalSet pTreeCredalSet,ProbabilityTree pTree):
+
+{
+ Token Q;
+ int i;
+ ProbabilityTree newTree;
+}
+{
+
+  (
+  ((Q=<DECIMAL_LITERAL>)
+  	{i = Integer.parseInt(Q.image);  newTree = (ProbabilityTree) pTree.getChild().elementAt(i); })
+  	|
+  ((Q=<WORD>|Q=<STRING>|Q=<BOOLEAN>)
+  	{i = pTree.getVar().getId(Q.image);  newTree = (ProbabilityTree) pTree.getChild().elementAt(i); })
+  	|
+  ((Q=<STRINGDECIMAL>)
+  	{i = pTree.getVar().getId(Q.image.substring(1,Q.image.length()-1));  newTree = (ProbabilityTree) pTree.getChild().elementAt(i);})
+  )
+
+    <EQUAL> BodyConvexSetTree(pTreeCredalSet,newTree) 
+}
+
+void ExtremePointsDeclaration(PTreeCredalSet pTreeCredalSet,ProbabilityTree pTree):
+{
+  Vector values=new Vector();
+  FiniteStates mainVar=(FiniteStates)pTreeCredalSet.getVariables().elementAt(0);
+  Relation rel=new Relation(mainVar);
+  Potential pot;
+}
+{
+    // Now the declaration for the values, as a table
+
+    (
+      pot=TableDeclaration(rel) 
+      
+      // The potentials are stored in values
+
+      {
+         values.addElement(pot);
+      }
+    )+ 
+
+    {
+      // The values are arranged to the PTreeCredalSet
+
+      pTreeCredalSet.addValues(values,pTree);
+    }
+}
+
+Vector IntervalValues():
+{
+  Token Q;
+  Vector values=new Vector();
+}
+{
+  (
+    // May be the whole interval is defined for a single value
+
+    ( 
+      ((Q=<DECIMAL_LITERAL>)|(Q=<INTEGER>)|(Q=<FLOAT>)|(Q=<FLOATSCI>) )
+      { 
+       values.addElement(new Double(Q.image));
+       values.addElement(new Double(Q.image));
+      }
+
+      // This is optional
+
+      (";")?
+    )
+
+    // Or the complete interval will be defined
+
+    | 
+  
+    (
+      "(" ((Q=<DECIMAL_LITERAL>)|(Q=<INTEGER>)|(Q=<FLOAT>)|(Q=<FLOATSCI>) )
+      {
+        // Read the min value
+
+        values.addElement(new Double(Q.image));
+      }
+
+      // A "," is optional
+    
+      (",")?
+
+      // Now the max value
+      
+      ((Q=<DECIMAL_LITERAL>)|(Q=<INTEGER>)|(Q=<FLOAT>)|(Q=<FLOATSCI>) )
+      {
+        // Max value is assigned
+  
+        values.addElement(new Double(Q.image));
+      }
+
+      ")" (";")?
+    )  
+  )
+
+  {
+     // Return the vector of values
+
+     return values;
+  }    
+}
+
+
+void DensityDeclaration(MixtExpDensity D):
+
+{boolean neg;
+}
+
+{
+
+
+(
+{neg=false;}DensityElement(D,neg)( ("+"|("-"{neg=true;}))? DensityElement(D,neg){neg=false;})*)
+
+}
+
+
+
+void DensityElement(MixtExpDensity D,boolean neg):
+
+{Token Q;
+MixtExpDensity E;
+boolean lfac;
+ double x;
+Continuous C;
+double m,v;
+ Double y;
+
+ LinearFunction L;
+ LinearFunction lf;
+ QuadraticFunction qf;
+ boolean linear;}
+
+
+
+{ ( LOOKAHEAD(3)  (    ((Q=<FLOAT>)|(Q=<FLOATSCI>)|(Q=<INTEGER>))
+
+     {y =new Double(Q.image);} ("*")? <EXP>
+
+      "(" {qf = new QuadraticFunction();}
+
+        (linear = QuadraticFunctionDeclaration(qf)) ")"
+
+
+
+     {
+     if(linear) {lf = new LinearFunction(qf);
+     if (neg)
+     {D.addTerm(new Double(-y.doubleValue()),lf);} else {D.addTerm(y,lf);}}
+     else
+     {
+     if (neg)
+     {D.addTerm(new Double(-y.doubleValue()),qf);} else {D.addTerm(y,qf);}
+     }
+     }
+     )|
+
+(<EXP>
+
+      "(" {qf = new QuadraticFunction();}
+
+         (linear = QuadraticFunctionDeclaration(qf)) ")"
+      {
+    	 if(linear) {lf = new LinearFunction(qf);
+      	 if (neg)
+    	 {D.addTerm(-1.0,lf);} else {D.addTerm(1.0,lf);}}
+    		 else
+    	 {
+    	 if (neg)
+    	 {D.addTerm(-1.0,qf);} else {D.addTerm(1.0,qf);}
+    	 }
+   	  }
+ )
+     |
+(<GAUSS>"("  ((Q=<WORD>)|(Q=<STRING>))","
+{C = (Continuous) Nodes.getNode(Q.image); }
+((Q=<FLOAT>)|(Q=<FLOATSCI>)|(Q=<INTEGER>))
+{m = (new Double(Q.image)).doubleValue();} ","
+   {lfac=false;}{L = new LinearFunction();}  (LOOKAHEAD(2)LinearFunctionDeclaration(L)"," {lfac=true;})?
+        ((Q=<FLOAT>)|(Q=<FLOATSCI>)|(Q=<INTEGER>))
+{v = (new Double(Q.image)).doubleValue();  }  ")"
+	{if(lfac) {E = new  MixtExpDensity(C, m, L, v);} else  {E = new  MixtExpDensity(C, m,  v);}
+    if (neg)     {D.addTerm(-E.getFactor(0),E.getExponent(0));}  else {D.addTerm(E.getFactor(0),E.getExponent(0));}
+	}
+)
+   |  LOOKAHEAD(3)
+( ((Q=<FLOAT>)|(Q=<FLOATSCI>)|(Q=<INTEGER>))
+   {y =new Double(Q.image);} ("*")? <GAUSS>"("  ((Q=<WORD>)|(Q=<STRING>))","
+{C = (Continuous) Nodes.getNode(Q.image); }
+((Q=<FLOAT>)|(Q=<FLOATSCI>)|(Q=<INTEGER>))
+{m = (new Double(Q.image)).doubleValue();} ","
+   {lfac=false;}{L = new LinearFunction();}  (LOOKAHEAD(2)LinearFunctionDeclaration(L)"," {lfac=true;})?
+        ((Q=<FLOAT>)|(Q=<FLOATSCI>)|(Q=<INTEGER>))
+{v = (new Double(Q.image)).doubleValue();  }  ")"
+	{if(lfac) {E = new  MixtExpDensity(C, m, L, v);} else  {E = new  MixtExpDensity(C, m,  v);}
+    if (neg)     {D.addTerm(-E.getFactor(0)*y.doubleValue(),E.getExponent(0));}  else {D.addTerm(E.getFactor(0)*y.doubleValue(),E.getExponent(0));}
+	}
+)    |
+
+  ( ((Q=<FLOAT>)|(Q=<FLOATSCI>)|(Q=<INTEGER>))
+
+   { x = (new Double(Q.image)).doubleValue();
+
+     if (neg) {D.addIndependent(-x);} else  {D.addIndependent(x);}}
+
+  )
+)
+
+
+
+
+}
+
+
+
+
+
+void LinearFunctionDeclaration(LinearFunction L):
+
+{ boolean neg;
+
+}
+
+
+
+{{neg=false;} ("-" {neg=true;})?
+
+ ElementLinear(L,neg) ({neg=false;} ("+"|("-" {neg=true;}))? ElementLinear(L,neg)   )* }
+
+
+
+void ElementLinear(LinearFunction L,boolean neg):
+
+{Token Q;
+
+Double y;
+
+Continuous var;
+
+}
+
+
+
+{  ( ((Q=<FLOAT>)|(Q=<FLOATSCI>)|(Q=<INTEGER>))
+
+      {y =new Double(Q.image);}
+
+    ("*")?
+
+      ( (Q=<WORD>)|(Q=<STRING>) )
+
+       {var =  (Continuous)  Nodes.getNode(Q.image);
+
+        if (neg) {L.addVariable(var,new Double(-y.doubleValue()) );} else {L.addVariable(var,y);}
+
+        })
+
+       |
+
+        (( (Q=<WORD>)|(Q=<STRING>) )
+
+       {var =  (Continuous)  Nodes.getNode(Q.image);
+
+        if (neg) {L.addVariable(var,-1.0);} else  {L.addVariable(var,1.0);}
+
+         }
+
+     )
+
+
+
+
+
+
+
+}
+
+
+boolean QuadraticFunctionDeclaration(QuadraticFunction qf):
+
+{ boolean neg,linear,quaelement;
+
+
+}
+
+{
+
+{linear = true;neg=false;}
+
+("-" {neg=true;})?
+        (quaelement = ElementQuadratic(qf,neg))
+	({neg=false; if (quaelement) {linear=false;}}
+	("+"|("-" {neg=true;}))? (quaelement = ElementQuadratic(qf,neg)) {if (quaelement) {linear=false;}}   )*
+
+
+{return(linear);}
+}
+
+boolean ElementQuadratic(QuadraticFunction qf,boolean neg):
+
+{Token Q;
+
+Double y;
+
+Continuous var1;
+Continuous var2;
+boolean quadr;
+
+
+}
+
+{
+{quadr = false;
+y = new Double(2.0);
+var2=null;
+}
+
+
+
+   (((Q=<FLOAT>)|(Q=<FLOATSCI>)|(Q=<INTEGER>))  {  y=new Double(Q.image); }         )?
+
+
+    ("*")?
+
+      ( (Q=<WORD>)|(Q=<STRING>) )
+
+       {var1=  (Continuous)  Nodes.getNode(Q.image);}
+      (  ("*"     ( (Q=<WORD>)|(Q=<STRING>) ){var2=  (Continuous)  Nodes.getNode(Q.image);quadr=true;}  )|  (<SQUARE> {var2=var1;quadr=true; }) )?
+
+      {
+        if (quadr)
+        {if (neg) {qf.addVariable(var1,var2,new Double(-y.doubleValue()) );} else {qf.addVariable(var1,var2,y);}}
+	else
+	{if (neg) {qf.addVariable(var1,new Double(-y.doubleValue()) );} else {qf.addVariable(var1,y);}
+       }
+        }
+
+
+
+
+
+
+
+{return(quadr);}
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+void ListWords(Vector C):
+
+{Token T;}
+
+
+
+{ LOOKAHEAD(2) ((T=<WORD>|T=<STRING>|T=<BOOLEAN>|T=<DECIMAL_LITERAL>|T=<PARAMETER_WORD>)
+
+  {C.addElement(T.toString());} <COMMA> ListWords(C))|
+
+  LOOKAHEAD(2) ((T=<WORD>|T=<STRING>|T=<BOOLEAN>|T=<DECIMAL_LITERAL>|T=<PARAMETER_WORD>)
+
+  {C.addElement(T.toString());} ListWords(C))|
+
+  ((T=<WORD>|T=<STRING>|T=<BOOLEAN>|T=<DECIMAL_LITERAL>|T=<PARAMETER_WORD>)
+
+  {C.addElement(T.toString());})
+
+
+
+
+
+}
+
+
+
+void ConstraintBody(LogicalExpression LE) :
+
+{LogicalNode antecedent;
+
+ LogicalNode consecuent;
+
+ Vector logicalNodes=new Vector();
+
+ int operator;}
+
+{
+
+  LogicalExpressionBody(logicalNodes)
+
+           (<IMPLICATION> {operator=LogicalNode.IMPLICATION;} |
+
+            <DOUBLEIMPLICATION> {operator=LogicalNode.DOUBLE_IMPLICATION;})
+
+  LogicalExpressionBody(logicalNodes)
+
+  { antecedent=(LogicalNode)logicalNodes.elementAt(0);
+
+    consecuent=(LogicalNode)logicalNodes.elementAt(1);
+
+    LE.setAntecedent(antecedent);
+
+    LE.setConsecuent(consecuent);
+
+    LE.setOperator(operator);
+
+  }
+
+}
+
+
+
+void LogicalExpressionBody(Vector logicalNodes) :
+
+{LogicalNode LNOperator;
+
+ LogicalNode LNOp1;
+
+ LogicalNode LNOp2;
+
+ int last;}
+
+{
+
+  OrFactor(logicalNodes) (<OR> OrFactor(logicalNodes)
+
+               {LNOperator=new LogicalNode(LogicalNode.OR);
+
+                last=logicalNodes.size();
+
+                LNOp1=(LogicalNode)logicalNodes.elementAt(last-1);
+
+                LNOp2=(LogicalNode)logicalNodes.elementAt(last-2);
+
+                logicalNodes.removeElementAt(last-1);
+
+                logicalNodes.removeElementAt(last-2);
+
+                LNOperator.setLeftOperand(LNOp2);
+
+                LNOperator.setRightOperand(LNOp1);
+
+                logicalNodes.addElement(LNOperator);
+
+               })*
+
+}
+
+
+
+void OrFactor(Vector logicalNodes) :
+
+{LogicalNode LNOperator;
+
+ LogicalNode LNOp1;
+
+ LogicalNode LNOp2;
+
+ int last;}
+
+{
+
+ Factor(logicalNodes){} (<AND> Factor(logicalNodes)
+
+               {LNOperator=new LogicalNode(LogicalNode.AND);
+
+                last=logicalNodes.size();
+
+                LNOp1=(LogicalNode)logicalNodes.elementAt(last-1);
+
+                LNOp2=(LogicalNode)logicalNodes.elementAt(last-2);
+
+                logicalNodes.removeElementAt(last-1);
+
+                logicalNodes.removeElementAt(last-2);
+
+                LNOperator.setLeftOperand(LNOp2);
+
+                LNOperator.setRightOperand(LNOp1);
+
+                logicalNodes.addElement(LNOperator);
+
+               })*
+
+}
+
+
+
+void Factor(Vector logicalNodes) :
+
+{boolean flag=false;
+
+ LogicalNode LN;}
+
+{
+
+  (<NOT>{flag=true;})? ((Assign(logicalNodes) |
+
+   "(" LogicalExpressionBody(logicalNodes) ")"))
+
+           {LN=(LogicalNode)logicalNodes.elementAt(logicalNodes.size()-1);
+
+            LN.setNegated(flag);}
+
+}
+
+
+
+void Assign(Vector logicalNodes) :
+
+{Token t;
+
+ Vector values;
+
+ LogicalNode LN;
+
+ Node P;
+
+ boolean flag=false;}
+
+{
+
+  (t=<WORD>) {values=new Vector();
+
+              P=Nodes.getNode(t.image);}
+
+          (<IN> | <NOT><IN> {flag=true;}) "{" valueList(values) "}"
+
+           {DefaultValuesSet=new ValuesSet(P,values,flag);
+
+            LN=new LogicalNode(DefaultValuesSet);
+
+            logicalNodes.addElement(LN);}
+
+}
+
+
+
+void valueList(Vector values) :
+
+{Token value;}
+
+{
+
+  (value=<WORD>){values.addElement(value.toString());} ("," (value=<WORD>){values.addElement(value.toString());})* |
+  (value=<STRING>){values.addElement(value.toString());} ("," (value=<STRING>){values.addElement(value.toString());})* |
+  {}
+
+}
+
+
+
+
+
+
+
+
+

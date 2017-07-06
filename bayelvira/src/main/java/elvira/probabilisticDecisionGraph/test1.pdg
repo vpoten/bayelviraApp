@@ -1,0 +1,60 @@
+// PDG loaded from file 'test.pdg':
+pdg "test"{
+	node X0(finite-states){
+		title="titleX0";
+		states=("X00" "X01" "X02" );
+		pnode{
+			id=1;
+			values=table(0.3 0.5 0.2 );
+		}
+	}
+
+	node X2(finite-states){
+		title="titleX2";
+		states=("X20" "X21" "X22" );
+		pnode{
+			id=2;
+			values=table(0.7 0.1 0.2 );
+		}
+		pnode{
+			id=3;
+			values=table(0.0 0.1 0.9 );
+		}
+	}
+
+	node X1(finite-states){
+		title="titleX1";
+		states=("X10" "X11" "X12" );
+		pnode{
+			id=4;
+			values=table(0.1 0.5 0.4 );
+		}
+		pnode{
+			id=5;
+			values=table(0.0 0.0 1.0 );
+		}
+	}
+
+	node X3(finite-states){
+		title="titleX3";
+		states=("X30" "X31" );
+		pnode{
+			id=6;
+			values=table(0.1 0.9 );
+		}
+		pnode{
+			id=7;
+			values=table(0.4 0.6 );
+		}
+	}
+
+	structure{
+	X0 -> (	X2 ){
+			1 -> (2 2 3 ) ;
+		}
+	X2 -> (	X1 	X3 ){
+			2 -> (4 5 4 ) (6 7 7 ) ;
+			3 -> (5 4 5 ) (7 6 7 ) ;
+		}
+	}
+}

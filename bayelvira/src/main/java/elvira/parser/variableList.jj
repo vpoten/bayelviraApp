@@ -1,0 +1,214 @@
+options 
+{STATIC = false;
+ LOOKAHEAD=4;
+ FORCE_LA_CHECK=true;
+ }
+
+
+PARSER_BEGIN(VariableListParse)
+
+//import java.util.Vector;
+//import java.util.Enumeration;
+
+package elvira.parser;
+
+import elvira.*;
+import java.io.*;
+
+    
+public class VariableListParse {
+
+ String Name;
+ String Title;
+ String Comment;
+ String Author;
+ String WhoChanged;
+ String WhenChanged;
+ String version;
+ String NetworkName;
+ boolean locked;
+ public NodeList Nodes,outputNodes; 
+  
+ 
+
+
+  public static void main(String args[]) throws ParseException
+   ,IOException {
+
+    NodeList Nodes;
+    	Bnet b;
+      FileInputStream f;  
+      FileWriter f2;
+  
+      f = new FileInputStream("cancer_m.elv");
+      b = new Bnet(f);
+      f.close();
+	Nodes = b.getNodeList();
+
+    f = new FileInputStream("ejemplo.var");    
+
+    VariableListParse parser = new VariableListParse(f);
+    
+    parser.initialize(Nodes);
+        parser.CompilationUnit();
+        System.out.println(parser.outputNodes.size());
+	parser.outputNodes.print();
+ 
+    
+
+    
+   
+     }
+
+  public void initialize(NodeList N) {
+   
+
+   Name =  new String("");
+   Title =  new String("");
+   Comment =  new String("");
+   Author =  new String("");
+   WhoChanged =  new String("");
+   WhenChanged =  new String("");
+   version =  new String("1.0");
+   NetworkName = new String("");
+   locked = false;
+   Nodes = N;
+   outputNodes = new NodeList();   
+
+    }
+
+}
+
+PARSER_END(VariableListParse)
+
+
+SKIP:
+{<" "|"\t"|"\n"|"\r">}
+
+SKIP:
+{<"//" (~["\n","\r"])* ("\n"|"\r\n")>}
+
+SKIP:
+{<"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">}
+
+
+TOKEN:
+{
+ <VARIABLELIST: "variables">|
+ <TITLE: "title">|
+ <COMMENT: "comment">|
+ <AUTHOR: "author">|
+ <WHOCHANGED: "whochanged">|
+ <WHENCHANGED: "whenchanged">|
+ <VERSION: "version">|
+ <LOCKED: "locked">|
+ <NETWORKNAME: "networkname">
+ 
+}
+
+
+TOKEN:
+{
+ <BOOLEAN: <TRUE> | <FALSE>>|
+ <TRUE: "true">|
+ <FALSE: "false">
+}
+
+TOKEN:
+{
+  <OPEN_PAREN: "(">
+  |
+  <CLOSE_PAREN: ")">
+  |
+  <COMMA: ",">  
+ 
+}    
+
+
+TOKEN:
+{
+<WORD: <LETTER>(<LETTER>|<DIGIT>)*>
+|
+<#LETTER: ["a"-"z","A"-"Z","_","-"]>
+|
+<#DIGIT: ["0"-"9"]>
+}
+
+
+TOKEN:
+{
+ <DECIMAL_LITERAL: ((<DIGIT>)+)>}
+
+TOKEN:
+{<INTEGER: ("+"|"-")?(<DIGIT>)+>}
+
+TOKEN:
+{<FLOAT: ("+"|"-")?
+(((<DIGIT>)+)|
+((<DIGIT>)+"."(<DIGIT>)*)|
+((<DIGIT>)*"."(<DIGIT>)+)) 
+(("E"|"e")<INTEGER>)?>
+}
+
+TOKEN:
+{<EQUAL: "=">}
+
+TOKEN:
+{<STRINGDECIMAL: "\""<DECIMAL_LITERAL>"\"">}
+
+TOKEN:
+{<STRING: "\""(~["\""])*"\"">}
+
+
+void CompilationUnit() :
+{}
+{
+  VariablesDeclaration() "}"
+  <EOF>
+}
+
+
+
+void VariablesDeclaration():
+{Token T;}
+{ <VARIABLELIST> (T=<WORD>){
+ Name = T.image;}
+ "{" Content ()}
+
+
+
+
+void Content():
+{}
+{ (Property()";")* (Variable()<COMMA>)* }
+
+
+
+
+
+void Property():
+{Token T;}
+
+{ 
+  (<TITLE><EQUAL>(T=<STRING>){Title=T.image.substring(1,T.image.length()-1);})|
+  (<COMMENT><EQUAL>(T=<STRING>){Comment=T.image.substring(1,T.image.length()-1);})|
+   (<AUTHOR><EQUAL> (T=<STRING>) {Author=T.image.substring(1,T.image.length()-1);})|
+  (<WHOCHANGED><EQUAL> (T=<STRING>) {WhoChanged=T.image.substring(1,T.image.length()-1);})|
+  (<WHENCHANGED><EQUAL> (T=<STRING>) {WhenChanged=T.image.substring(1,T.image.length()-1);})|
+  (<LOCKED><EQUAL> (T=<BOOLEAN>) 
+       { if (T.image.equals("true")){locked=true;}
+         else {locked=false;}
+       })|
+ (<VERSION><EQUAL>(T=<FLOAT>){version = T.image;})| 
+  (<NETWORKNAME><EQUAL> (T=<WORD>) {NetworkName = T.image;})|
+   (<WORD><EQUAL>(<BOOLEAN>|<WORD>|<STRING>|<DECIMAL_LITERAL>))}
+
+
+void Variable():
+{Token T;
+ Node V;
+}
+
+{ (T=<WORD>){ V= Nodes.getNode(T.image);
+	      outputNodes.insertNode(V);}
+}

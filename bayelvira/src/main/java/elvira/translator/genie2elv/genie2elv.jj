@@ -1,0 +1,514 @@
+options
+{STATIC = false;
+ FORCE_LA_CHECK=true;
+ //DEBUG_TOKEN_MANAGER=true;
+}
+
+
+PARSER_BEGIN(Genie2ElvParse)
+
+package elvira.translator.genie2elv;
+
+import java.util.Vector;
+import java.io.*;
+
+import elvira.translator.*;
+import elvira.Node;
+import elvira.FiniteStates;
+import elvira.Continuous;
+import elvira.NodeList;
+import elvira.Link;
+import elvira.LinkList;
+import elvira.Bnet;
+import elvira.IDiagram;
+import elvira.Relation;
+import elvira.potential.PotentialTable;
+import elvira.Configuration;
+
+
+public class Genie2ElvParse extends ToElvParse {
+  public static void main(String args[]) throws ParseException
+   ,IOException {
+   IDiagram b;
+   FileInputStream networkFile;
+   FileWriter networkOutputFile;
+
+   
+   if (args.length<2)
+     System.out.println("Too few arguments. Arguments are: GenieFile ElviraFile");
+   else {
+     networkFile = new FileInputStream(args[0]);
+     Genie2ElvParse parser = new Genie2ElvParse(networkFile);
+     parser.initialize();
+
+     parser.CompilationUnit();
+     b=new IDiagram();
+     /*if(parser.isID){
+       b=new IDiagram();
+     }
+     else{
+       b=new Bnet();
+     }*/
+     b.translate((ToElvParse)parser);
+     networkOutputFile= new FileWriter(args[1]);
+     b.saveBnet(networkOutputFile);
+     networkOutputFile.close();     
+   }
+  }
+    
+  private class Pos{
+    int centerX=0;
+    int centerY=0;
+    int width=0;
+    int height=0;
+
+  }
+}
+
+PARSER_END(Genie2ElvParse)
+
+
+SKIP:
+{<" "|"\t"|"\n"|"\r">}
+
+SKIP:
+{<"//" (~["\n","\r"])* ("\n"|"\r\n")>}
+
+SKIP:
+{<"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">}
+
+
+
+TOKEN:
+{
+ <HEADER: "HEADER">|
+ <CREATION: "CREATION">|
+ <NUMSAMPLES: "NUMSAMPLES">|
+ <CREATOR: "CREATOR">|
+ <CREATED: "CREATED">|
+ <MODIFIED: "MODIFIED">|
+ <IDENTIFICATOR: "ID">|
+ <COMMENT: "COMMENT">|
+ <TYPE: "TYPE">|
+ <SCREEN: "SCREEN">|
+ <SCREENCOMMENT: "SCREENCOMMENT">|
+ <CENTER_X: "CENTER_X">|
+ <CENTER_Y: "CENTER_Y">|
+ <WIDTH: "WIDTH">|
+ <HEIGHT: "HEIGHT">|
+ <COLOR: "COLOR">|
+ <SELCOLOR: "SELCOLOR">|
+ <FONT: "FONT">|
+ <FONTCOLOR: "FONTCOLOR">|
+ <BORDERTHICKNESS: "BORDERTHICKNESS">|
+ <BORDERCOLOR: "BORDERCOLOR">|
+ <BKCOLOR: "BKCOLOR">|
+ <PARENTS: "PARENTS">|
+ <DEFINITION: "DEFINITION">|
+ <NAMESTATES: "NAMESTATES">|
+ <PROBABILITIES: "PROBABILITIES">|
+ <NAMECHOICES: "NAMECHOICES">|
+ <UTILITIES: "UTILITIES">|
+ <NET: "net">|
+ <WINDOWPOSITION: "WINDOWPOSITION">|
+ <NAME: "NAME">|
+ <POSITION: "POSITION">|
+ <NODE: "node">
+}
+
+TOKEN:
+{<ONETYPE: "CPT"|"LIST"|"TABLE"|"MAU"|"TRUTHTABLE">}
+
+TOKEN:
+{<INTEGER: ("+"|"-")?(<DIGIT>)+>}
+
+TOKEN:
+{
+<FLOATSCI: ("+"|"-")?
+    (<DIGIT>)+("."(<DIGIT>)*)?
+   ("E"|"e")("+"|"-")(<DIGIT>)+>
+}
+
+TOKEN:
+{<FLOAT: ("+"|"-")?
+    (<DIGIT>)+"."(<DIGIT>)*>
+}
+
+
+TOKEN:
+{
+<ID: <LETTER>(<LETTER>|<DIGIT>|"_")*>|
+<#LETTER: ["a"-"z","A"-"Z"]>|
+<#DIGIT: ["0"-"9"]>
+}
+
+
+TOKEN:
+{<EQUAL: "=">}
+
+TOKEN:
+{<STRING: "\""(~["\""])*"\"">}
+
+TOKEN:
+{<SEP: ";">}
+
+
+void CompilationUnit() :
+{}
+{
+  (NetworkDeclaration() ";" )
+  <EOF>
+}
+
+void NetworkDeclaration():
+{Token T;}
+{
+ <NET> ((T=<ID>))
+ {
+   Name=(T.toString());
+ }
+ "{" ( NetStatement() ";" )* "}"
+}
+
+void NetStatement():
+{}
+{ 
+  NetField()|
+  NodeDeclaration()
+}
+
+void NetField():
+{Token T;}
+{
+  (<HEADER> <EQUAL> "{" (HeaderStatement() ";" )* "}" ) |
+  (<CREATION> <EQUAL> "{" (CreationStatement() ";" )* "}") |
+  ((T=<NUMSAMPLES>) <EQUAL> <INTEGER>
+  {
+    System.out.println("Warning: Encountered: NUMSAMPLES=Integer at line " + T.beginLine + ", column " + T.beginColumn  +
+      ". Ignoring it. This network property is not supported in Elvira format\n");
+  })|
+  (<SCREEN> <EQUAL> "{" (ScreenProperty() ";" )* "}")|
+  ((T=<WINDOWPOSITION>) <EQUAL> Position() 
+  {
+    System.out.println("Warning: Encountered: WINDOWPOSITION = ... at line " + T.beginLine + ", column " + T.beginColumn  +
+      ". Ignoring it. This network property is not supported in Elvira format\n");
+  }) | 
+  ((T=<BKCOLOR>) <EQUAL> <INTEGER>
+  {
+    System.out.println("Warning: Encountered: BKCOLOR=Integer at line " + T.beginLine + ", column " + T.beginColumn  +
+      ". Ignoring it. This network property is not supported in Elvira format\n");
+  })|
+  ((T=<SCREENCOMMENT>) <EQUAL> "{" "(" <INTEGER> "," <INTEGER> "," <INTEGER> "," <INTEGER> ")" ","
+      <STRING> "}"
+  {
+    System.out.println("Warning: Encountered: SCREENCOMMENT = ... at line " + T.beginLine + ", column " + T.beginColumn  +
+      ". Ignoring it. This network property is not supported in Elvira format\n");
+  })
+}
+
+void HeaderStatement():
+{Token T;}
+{
+  (<IDENTIFICATOR> <EQUAL> (T=<ID>)
+  {
+    Name=(T.toString());
+  }) |
+  (<NAME> <EQUAL> (T=<STRING>) 
+  {
+    Title=(T.image.substring(1,T.image.length()-1));
+  }) |
+  (<COMMENT> <EQUAL> (T=<STRING>)
+  {
+    Comment=(T.image.substring(1,T.image.length()-1));
+  })
+}
+
+void CreationStatement():
+{Token T;}
+{
+  (<CREATOR> <EQUAL> (T=<STRING>)
+  {
+    Author=T.image.substring(1,T.image.length()-1);
+  }) |
+  ((T=<CREATED>) <EQUAL> <STRING>  
+  {
+    System.out.println("Warning: Encountered: CREATED = String at line " + T.beginLine + ", column " + T.beginColumn  +
+      ". Ignoring it. This network property is not supported in Elvira format\n");
+  }) |
+  (<MODIFIED> <EQUAL> (T=<STRING>)
+  {
+    WhenChanged=T.image.substring(1,T.image.length()-1);    
+  })
+}
+
+Pos Position():
+{Pos pos=new Pos();
+ Token T;}
+{
+  "{"
+   (
+    (
+      ("CENTER_X" <EQUAL> (T=<INTEGER>)
+      {
+        pos.centerX=Integer.valueOf(T.image).intValue();
+      }
+      )|
+      ("CENTER_Y" <EQUAL> (T=<INTEGER>)
+      {
+        pos.centerY=Integer.valueOf(T.image).intValue();
+      }      
+      )|
+      ("WIDTH" <EQUAL> (T=<INTEGER>)
+      {
+        pos.width=Integer.valueOf(T.image).intValue();
+      }  
+      )|
+      ("HEIGHT" <EQUAL> (T=<INTEGER>)
+      {
+        pos.height=Integer.valueOf(T.image).intValue();
+      }
+      ) 
+    )
+    ";" 
+   )*
+  "}" 
+  {
+    return pos;
+  }
+}
+
+void ScreenProperty():
+{
+ Token T;
+ Pos pos;
+}
+{
+  ((T=<POSITION>) <EQUAL> (pos=Position()) )|
+  ((T=<COLOR>) <EQUAL> <INTEGER>)|
+  ((T=<SELCOLOR>) <EQUAL> <INTEGER>)|
+  ((T=<FONT>) <EQUAL> <INTEGER>)|
+  ((T=<FONTCOLOR>) <EQUAL> <INTEGER>)|
+  ((T=<BORDERTHICKNESS>) <EQUAL> <INTEGER>)|
+  ((T=<BORDERCOLOR>) <EQUAL> <INTEGER>)
+  {
+    System.out.println("Warning: Encountered \"" +T.toString()+"\"= ..." + " at line " + 
+      T.beginLine + ", column " + T.beginColumn  +
+      ". Ignoring it. This network property is not supported in Elvira format\n");
+  }
+}
+
+void NodeDeclaration():
+{ 
+  Token T,Type;
+  int nodeType;
+  Relation relation=null;
+  Node N=null;
+}
+{
+  <NODE> (T=<ID>)
+  "{"  
+  <TYPE> <EQUAL> (Type=<ONETYPE>) ";" 
+  {
+    if(Type.image.equals("CPT") || Type.image.equals("LIST")){
+      N=(FiniteStates) DefaultFinite.copy();
+      if(Type.image.equals("LIST")){
+	N.setKindOfNode(Node.DECISION);
+      }      
+    }
+    else if(Type.image.equals("TABLE")){
+      N= (Continuous) DefaultContinuous.copy();
+      N.setKindOfNode(Node.UTILITY);
+    }
+    else{
+      System.out.println("Error in Genie to Elvira translator: Encountered \"Type=" +
+			 Type.toString()+"\" at line " + Type.beginLine + 
+			 ", column " + Type.beginColumn  +
+			 ". This type of node is not supported yet in the translator\n");
+      System.exit(1);
+    }
+    N.setName(T.image);
+    Nodes.insertNode(N);
+  }
+  ((NodeField(N,relation) | relation=ParentsDeclaration(N)) ";")*
+  "}"
+}
+
+Relation ParentsDeclaration(Node N):
+{
+  Token T;
+  Link K;
+  Relation R=null; 
+  Vector listVariables=new Vector();
+  listVariables.addElement(N.getName());
+}
+{
+  <PARENTS> <EQUAL> 
+      "("  
+         ((T=<ID>)
+         {
+           K=null;
+           K = new Link(true);
+           K.setHead (Nodes.getNode((String)N.getName()));
+           K.setTail (Nodes.getNode((String)T.image) );
+           Links.insertLink(K); 
+	   listVariables.addElement(T.toString());
+         }
+         ("," (T=<ID>)
+         {
+           K=null;
+           K = new Link(true);
+           K.setHead (Nodes.getNode((String)N.getName()));
+           K.setTail (Nodes.getNode((String)T.image) );
+           Links.insertLink(K);     
+	   listVariables.addElement(T.toString());
+         }
+         )* 
+         )? 
+      ")"  
+      {
+	if((N.getKindOfNode()==Node.CHANCE) || (N.getKindOfNode()==Node.UTILITY)){
+	  R = DefaultRelation.copy();
+	  R.setVariablesFromNames(listVariables,Nodes);
+	  if(R.withUtilityNode()){
+	    R.setKind(R.UTILITY);
+	  }
+	  Relations.addElement(R);
+	}
+	return R;
+      }
+}
+
+void NodeField(Node N, Relation R):
+{
+  Token T;
+}
+{
+  (<HEADER> <EQUAL> "{" (NodeHeaderStatement(N) ";" )* "}" ) |
+  (<SCREEN> <EQUAL> "{" (NodeScreenProperty(N) ";" )* "}" ) |
+  (<DEFINITION> <EQUAL> "{" (NodeDefinitionStatement(N,R) ";" )* "}")
+
+
+}
+
+void NodeDefinitionStatement(Node N, Relation R):
+{
+  Vector V=new Vector();
+  PotentialTable potTable;
+}
+{        
+  (<NAMESTATES> <EQUAL>  "(" ListStates(V) ")" 
+    {
+      ((FiniteStates)N).setStates(V);
+    } 
+  )|
+  (<PROBABILITIES> <EQUAL> 
+    { 
+      potTable = new PotentialTable(R.getVariables());
+      potTable.setValue(-1.0);
+    }
+    "(" ListFloats(potTable) ")" 
+    {
+      R.setValues(potTable);
+    }
+  )|
+  (<NAMECHOICES> <EQUAL>  "(" ListStates(V) ")" 
+    {
+      ((FiniteStates)N).setStates(V);
+    } 
+  )|
+  (<UTILITIES> <EQUAL> 
+    { 
+      potTable = new PotentialTable(R.chanceAndDecisionNodes());
+      potTable.setValue(0.0);
+    }
+    "(" ListFloats(potTable) ")" 
+    {
+      R.setValues(potTable);
+    }
+  )   
+}
+
+void ListStates(Vector C):
+{
+  Token T;
+}
+{
+  (T=<ID>) {C.addElement(T.toString()); }
+  ("," (T=<ID>) {C.addElement(T.toString()); } )* 
+}
+
+void ListFloats(PotentialTable Table):
+{
+ Token T;
+ int i;
+ Double D;
+
+ Configuration conf=new Configuration();
+ for(i=1;i<Table.getVariables().size();i++){
+        conf.insert((FiniteStates)(Table.getVariables().elementAt(i)),0);
+ }
+ conf.insert((FiniteStates)(Table.getVariables().elementAt(0)),0);
+}
+{ 
+  ((T=<FLOAT>)|(T=<FLOATSCI>) )
+    {
+      D= new Double(T.image);
+      Table.setValue(conf,D.doubleValue());      
+      conf.nextConfiguration();      
+    }
+  ("," ((T=<FLOAT>)|(T=<FLOATSCI>) )
+    {
+      D= new Double(T.image);
+      Table.setValue(conf,D.doubleValue());      
+      conf.nextConfiguration();      
+    }
+  )*
+}
+
+
+void NodeHeaderStatement(Node N):
+{Token T;}
+{
+  (<IDENTIFICATOR> <EQUAL> (T=<ID>)
+  {
+    N.setName(T.image);
+  }) |
+  (<NAME> <EQUAL> (T=<STRING>)
+  {
+    N.setTitle(T.image.substring(1,T.image.length()-1));
+  }
+  ) |
+  (<COMMENT> <EQUAL> (T=<STRING>)
+  {
+    N.setComment(T.image.substring(1,T.image.length()-1));
+  }
+  )
+}
+
+void NodeScreenProperty(Node N):
+{
+ Token T;
+ Pos pos;
+}
+{
+  (T=<POSITION> <EQUAL> (pos=Position()) 
+  {
+    N.setPosX(pos.centerX);
+    N.setPosY(pos.centerY);
+    N.setHigherAxis(pos.width);
+    N.setLowerAxis(pos.height);
+  }
+  )|
+  ((T=<COLOR> <EQUAL> <INTEGER>)|
+  (T=<SELCOLOR> <EQUAL> <INTEGER>)|
+  (T=<FONT> <EQUAL> <INTEGER>)|
+  (T=<FONTCOLOR> <EQUAL> <INTEGER>)|
+  (T=<BORDERTHICKNESS> <EQUAL> <INTEGER>)|
+  (T=<BORDERCOLOR> <EQUAL> <INTEGER>)
+  {
+    System.out.println("Warning: Encountered \"" +T.toString()+"\"= ..." + " at line " + 
+      T.beginLine + ", column " + T.beginColumn  +
+      ". Ignoring it. This node property is not supported in Elvira format\n");
+  }
+  )
+}

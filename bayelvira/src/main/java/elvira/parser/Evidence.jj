@@ -1,0 +1,255 @@
+options 
+{STATIC = false;
+ LOOKAHEAD=4;
+ FORCE_LA_CHECK=true;
+ }
+
+
+PARSER_BEGIN(EvidenceParse)
+
+//import java.util.Vector;
+//import java.util.Enumeration;
+
+    
+package elvira.parser;
+
+import elvira.*;
+import elvira.parser.ParseException;
+import java.io.*;
+
+    
+public class EvidenceParse {
+  public String Name;
+  public String Title;
+  public String Comment;
+  public String Author;
+  public String WhoChanged;
+  public String WhenChanged;
+  public String version;
+  public String NetworkName;
+  public boolean locked; 
+  public NodeList Nodes;
+  public ContinuousConfiguration C;
+
+  public static void main(String args[]) throws ParseException,IOException {
+    Evidence evi;
+    Network b;
+    FileInputStream  eviFile;
+    FileWriter eviOFile;
+
+    if (args.length < 2)
+      System.out.println("Too few arguments. Arguments are: ElviraFile EvidenceFile [OutputEvidenceFile]");
+    else {
+      b = Network.read(args[0]);
+      eviFile=new FileInputStream(args[1]);
+      evi = new Evidence(eviFile,b.getNodeList());
+      eviFile.close();
+      if (args.length >2) {
+        b.save(args[2]);
+        eviOFile = new FileWriter(args[2]);
+        evi.save(eviOFile);
+        eviOFile.close();
+      }
+    }
+  }
+
+  public void initialize(NodeList N) {
+    Name =  new String("");
+    Title =  new String("");
+    Comment =  new String("");
+    Author =  new String("");
+    WhoChanged =  new String("");
+    WhenChanged =  new String("");
+    version =  new String("1.0");
+    NetworkName = new String("");
+    locked = false;
+    Nodes = N;
+    C = new ContinuousConfiguration();  
+  }
+
+}
+
+PARSER_END(EvidenceParse)
+
+
+SKIP:
+{<" "|"\t"|"\n"|"\r">}
+
+SKIP:
+{<"//" (~["\n","\r"])* ("\n"|"\r\n")>}
+
+SKIP:
+{<"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">}
+
+
+TOKEN:
+{
+ <EVIDENCE: "evidence">|
+ <TITLE: "title">|
+ <COMMENT: "comment">|
+ <AUTHOR: "author">|
+ <WHOCHANGED: "whochanged">|
+ <WHENCHANGED: "whenchanged">|
+ <VERSION: "version">|
+ <LOCKED: "locked">|
+ <NETWORKNAME: "networkname">
+ 
+}
+
+
+TOKEN:
+{
+ <BOOLEAN: <TRUE> | <FALSE>>|
+ <TRUE: "true">|
+ <FALSE: "false">
+}
+
+TOKEN:
+{
+  <OPEN_PAREN: "(">
+  |
+  <CLOSE_PAREN: ")">
+  |
+  <COMMA: ",">  
+ 
+}    
+
+
+TOKEN:
+{
+<WORD: (~["\"","/", " " , "," , "{","}","\t","\n","[","]","(",")","=",";","|","*","+","-","!","^"])*
+
+       <LETTER>(~["\"","/", " " , "," ,"{","}","\t","\n","[","]","(",")","=",";","|","*","+","-","!","^"])*>
+|
+<#LETTER: ["a"-"z","A"-"Z","_"]>
+|
+<#DIGIT: ["0"-"9"]>
+}
+
+
+TOKEN:
+{
+ <DECIMAL_LITERAL: ((<DIGIT>)+)>}
+
+TOKEN:
+{<INTEGER: ("+"|"-")?(<DIGIT>)+>}
+
+TOKEN:
+{<FLOAT: ("+"|"-")?
+(((<DIGIT>)+)|
+((<DIGIT>)+"."(<DIGIT>)*)|
+((<DIGIT>)*"."(<DIGIT>)+)) 
+(("E"|"e")<INTEGER>)?>
+}
+
+TOKEN:
+{<EQUAL: "=">}
+
+TOKEN:
+{<STRINGDECIMAL: "\""<DECIMAL_LITERAL>"\"">}
+
+TOKEN:
+{<STRING: "\""(~["\""])*"\"">}
+
+
+void CompilationUnit() :
+{}
+{
+  EvidenceDeclaration() "}"
+  <EOF>
+}
+
+
+
+void EvidenceDeclaration():
+{Token T;}
+{ <EVIDENCE> (T=<WORD>){
+ Name = T.image;}
+ "{" EvidenceContent ()}
+
+
+
+
+void EvidenceContent():
+{}
+{ (Property()";")* (Assignation()<COMMA>)* }
+
+
+
+
+
+void Property():
+{Token T;}
+
+{ 
+  (<TITLE><EQUAL>(T=<STRING>){Title=T.image.substring(1,T.image.length()-1);})|
+  (<COMMENT><EQUAL>(T=<STRING>){Comment=T.image.substring(1,T.image.length()-1);})|
+   (<AUTHOR><EQUAL> (T=<STRING>) {Author=T.image.substring(1,T.image.length()-1);})|
+  (<WHOCHANGED><EQUAL> (T=<STRING>) {WhoChanged=T.image.substring(1,T.image.length()-1);})|
+  (<WHENCHANGED><EQUAL> (T=<STRING>) {WhenChanged=T.image.substring(1,T.image.length()-1);})|
+  (<LOCKED><EQUAL> (T=<BOOLEAN>) 
+       { if (T.image.equals("true")){locked=true;}
+         else {locked=false;}
+       })|
+ (<VERSION><EQUAL>(T=<FLOAT>){version = T.image;})| 
+  (<NETWORKNAME><EQUAL> (T=<WORD>) {NetworkName = T.image;})|
+   (<WORD><EQUAL>(<BOOLEAN>|<WORD>|<STRING>|<DECIMAL_LITERAL>))}
+
+
+void Assignation():
+{Token T1,T2;
+ Node V;
+  int value;
+  double dvalue;
+}
+
+{ (T1=<WORD>){ V= Nodes.getNode(T1.image);  } <EQUAL> 
+  (
+   ( (T2=<WORD>|T2=<STRING>) 
+      {if(V.getTypeOfVariable()==Node.FINITE_STATES){ 
+	 value = ((FiniteStates) V).getId(T2.image);
+	 C.insert((FiniteStates)V,value);
+       }
+       else if(V.getTypeOfVariable()==Node.CONTINUOUS){
+	 throw new ParseException(T2.image+" cannot be assigned to continuous node "+T1.image);
+       }
+      }
+   )|
+   ( (T2=<STRINGDECIMAL>) 
+      {if(V.getTypeOfVariable()==Node.FINITE_STATES){
+	 value =((FiniteStates)V).getId(T2.image.substring(1,T2.image.length()-1));
+	 C.insert((FiniteStates)V,value);
+       }
+       else if(V.getTypeOfVariable()==Node.CONTINUOUS){
+	 throw new ParseException(T2.image+" cannot be assigned to continuous node "+T1.image);
+       }
+      }
+    )|
+    ( (T2=<DECIMAL_LITERAL>)  
+      {if(V.getTypeOfVariable()==Node.FINITE_STATES){
+	 value = Integer.valueOf(T2.image).intValue();
+	 C.insert((FiniteStates)V,value);
+       }
+       else if(V.getTypeOfVariable()==Node.CONTINUOUS){
+	 Double D=new Double(T2.image);
+	 dvalue=D.doubleValue();
+	 C.insert((Continuous)V,dvalue);
+       }
+      }
+    )| 
+    ( ((T2=<INTEGER>) | (T2=<FLOAT>))
+      {if(V.getTypeOfVariable()==Node.FINITE_STATES){
+	 throw new ParseException(T2.image+" cannot be assigned to finite-states node "+T1.image);    
+       }
+       else if(V.getTypeOfVariable()==Node.CONTINUOUS){
+	 Double D=new Double(T2.image);
+	 dvalue=D.doubleValue();
+	 C.insert((Continuous)V,dvalue);
+       }
+      }
+    )
+   )
+   { }
+}
+     
+     

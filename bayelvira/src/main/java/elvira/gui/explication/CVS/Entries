@@ -1,0 +1,37 @@
+/AnalisysFunctionalRelation.java/1.1/Tue Jul 22 09:57:42 2008//
+/AnalisysMainFrame.java/1.1/Tue Jul 22 09:57:42 2008//
+/Case.java/1.21/Fri Nov 05 14:58:25 2010//
+/CaseEditor.java/1.1/Wed Jul 14 08:34:28 2004//
+/CaseMonitor.java/1.1/Wed Jul 14 08:34:28 2004//
+/CasesList.java/1.25/Wed Jul 28 16:53:46 2004//
+/ChoiceEvidence.java/1.1/Tue Jul 22 09:57:42 2008//
+/ChoiceInterestVariable.java/1.1/Tue Jul 22 09:57:42 2008//
+/DataGraphs.java/1.1/Tue Jul 22 09:57:42 2008//
+/EvidenceAnalysis.java/1.8/Mon Dec 18 10:58:13 2006//
+/ExplainCase.java/1.13/Tue Jun 22 09:46:50 2004//
+/ExplainLinkDialog.java/1.2/Wed Jul 28 16:53:46 2004//
+/ExplainNetDialog.java/1.2/Wed Jul 28 16:53:46 2004//
+/ExplainNodeDialog.java/1.2/Wed Jul 28 16:53:46 2004//
+/ExplanationContinuous.java/1.4/Mon Feb 02 12:25:49 2004//
+/ExplanationDensity.java/1.7/Wed Jul 28 16:53:46 2004//
+/ExplanationFStates.java/1.12/Mon Feb 07 16:51:49 2005//
+/ExplanationValueNode.java/1.2/Wed Apr 26 13:13:00 2006//
+/GraphPaint.java/1.1/Tue Jul 22 09:57:42 2008//
+/IntroEvidenceDialog.java/1.2/Wed Jul 14 08:34:28 2004//
+/LimitadorDeDocumento.java/1.1/Tue Jul 22 09:57:42 2008//
+/OptionsExplanation.java/1.1/Wed Jul 14 08:34:28 2004//
+/PurposeDialog.java/1.1/Wed Jul 14 08:34:28 2004//
+/ResultAnalisysGraph.java/1.1/Tue Jul 22 09:57:42 2008//
+/Sensitive_Group.java/1.1/Tue Jul 22 09:57:42 2008//
+/Start_Analisis.java/1.1/Tue Jul 22 09:57:42 2008//
+/VisualExplanationContinuous.java/1.7/Wed May 11 11:28:53 2005//
+/VisualExplanationFStates.java/1.28/Mon Feb 13 18:41:53 2006//
+/VisualExplanationValue.java/1.3/Wed Apr 26 13:13:00 2006//
+/VisualFStates.java/1.2/Tue Jun 22 09:46:50 2004//
+/VisualFStatesDistribution.java/1.7/Wed Jul 28 16:53:46 2004//
+/VisualLink.java/1.4/Fri Nov 05 14:58:59 2010//
+/VisualNode.java/1.6/Fri Nov 05 14:59:21 2010//
+/VisualValueDistribution.java/1.2/Wed Apr 26 13:13:00 2006//
+/macroExplanation.java/1.26/Wed Mar 08 10:06:59 2006//
+D/plotFunction////
+D/policytree////

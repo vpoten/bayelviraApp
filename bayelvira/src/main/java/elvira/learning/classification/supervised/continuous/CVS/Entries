@@ -1,0 +1,18 @@
+D
+/ContinuousClassifier.java/1.2/Mon Jul 30 15:47:27 2007//
+/ContinuousClassifierDiscriminativeLearning.java/1.1/Wed Jun 13 10:22:14 2007//
+/FANMTEPredictor.java/1.4/Tue Nov 27 14:52:35 2007//
+/GaussianPredictor.java/1.2/Mon Jun 06 09:24:26 2005//
+/IncrementSearchNaiveBayesContinuous.java/1.1/Wed Jun 13 10:10:38 2007//
+/IncrementSearchNaiveBayesContinuousMainParent.java/1.1/Wed Jun 13 10:24:52 2007//
+/MaximumSpanningForest.java/1.2/Tue Oct 16 07:43:20 2007//
+/MaximumSpanningTree.java/1.2/Mon Oct 15 16:41:49 2007//
+/NaiveGaussianPredictor.java/1.9/Tue Apr 05 18:58:50 2005//
+/NaiveMTEPredictor.java/1.23/Mon May 05 10:31:05 2008//
+/NaiveMTEPredictorMissingData.java/1.4/Fri May 02 08:01:19 2008//
+/SelectiveFANMTEPredictor.java/1.3/Tue Nov 27 14:52:43 2007//
+/SelectiveGaussianPredictor.java/1.1/Mon Jun 06 09:24:26 2005//
+/SelectiveNaiveMTEPredictor.java/1.11/Wed Jan 30 12:56:41 2008//
+/SelectiveTANMTEPredictor.java/1.7/Mon Jan 21 17:03:46 2008//
+/TANMTEPredictor.java/1.9/Wed Jan 30 12:40:19 2008//
+/kDBMTEPredictor.java/1.3/Tue Nov 27 14:53:27 2007//

@@ -1,0 +1,713 @@
+# Menus_sp.properties contains the Spanish options for the menus and the toolbar
+
+# This is the file used by default
+
+
+
+# Options of the file menu and items of the toolbar related with it
+
+
+
+File.label = File
+
+File.mnemonic = F
+
+
+
+File.New.label = New
+
+File.New.shortcut = N
+
+File.New.tip = Create a new network
+
+File.New.mnemonic = N
+
+
+
+File.Open.label = Open network ...
+
+File.Open.shortcut = O
+
+File.Open.tip = Open an existing network
+
+File.Open.mnemonic = O
+
+
+File.OpenDBC.label = Open cases file ...
+
+File.OpenDBC.shortcut = C
+
+File.OpenDBC.tip = Options for the data base cases files
+
+File.OpenDBC.mnemonic = C
+
+
+File.Import.label=Import cases file ...
+
+File.Import.mnemonic = I
+
+
+File.Export.label=Export cases file ...
+
+File.Export.mnemonic = E
+
+
+File.OpenURL.label = Open URL ...
+
+File.OpenURL.mnemonic = U
+
+
+
+File.Save.label = Save network
+
+File.Save.shortcut = S
+
+File.Save.tip = Save the active network
+
+File.Save.mnemonic = S
+
+
+
+File.SaveAs.label = Save network as ...
+
+File.SaveAs.mnemonic = A
+
+
+
+File.SaveAll.label = Save all networks
+
+File.SaveAll.mnemonic = L
+
+
+
+File.LoadEvidence.label = Load evidence
+
+File.LoadEvidence.mnemonic = V
+
+File.SaveEvidence.label = Save evidence
+
+File.SaveEvidence.mnemonic = I
+
+File.ImportBnetXbif.label = Import network from XBIF
+
+File.ImportBnetXbif.mnemonic = X
+
+File.ExportBnetXbif.label = Export network to XBIF
+
+File.ExportBnetXbif.mnemonic = B
+
+
+File.Close.label = Close
+
+File.Close.shortcut = W
+
+File.Close.mnemonic = E
+
+
+
+File.Exit.label = Exit
+
+File.Exit.mnemonic = X
+
+
+
+
+
+# Options for the edit menu and items of the toolbar related with it
+
+
+
+Edit.label = Edit
+
+Edit.mnemonic = E
+
+
+
+Edit.Undo.label = Undo
+
+Edit.Undo.shortcut = Z
+
+Edit.Undo.tip = Undo last operation
+
+Edit.Undo.mnemonic = U
+
+
+
+Edit.Redo.label = Redo
+
+Edit.Redo.shortcut = Y
+
+Edit.Redo.tip = Redo last operation
+
+Edit.Redo.mnemonic = R
+
+
+
+Edit.Cut.label = Cut
+
+Edit.Cut.shortcut = X
+
+Edit.Cut.tip = Cut the selection and put it on the clipboard
+
+Edit.Cut.mnemonic = T
+
+
+
+Edit.Copy.label = Copy
+
+Edit.Copy.shortcut = C
+
+Edit.Copy.tip = Copy the selection and put it on the clipboard
+
+Edit.Copy.mnemonic = C
+
+
+
+Edit.Paste.label = Paste
+
+Edit.Paste.shortcut = V
+
+Edit.Paste.tip = Insert clipboard contents
+
+Edit.Paste.mnemonic = P
+
+
+
+Edit.Delete.label = Delete
+
+Edit.Delete.mnemonic = D
+
+
+
+Edit.SelectAll.label = Select all
+
+Edit.SelectAll.shortcut = A
+
+Edit.SelectAll.mnemonic = A
+
+
+
+Edit.Select.label = Selection tool
+
+Edit.Select.mnemonic = S
+
+Edit.Select.tip = Selection tool
+
+
+
+Edit.Chance.label = Add chance node
+
+Edit.Chance.tip = Add a chance node in the network
+
+Edit.Chance.mnemonic = C
+
+
+
+Edit.Decision.label = Add decision node
+
+Edit.Decision.tip = Add a decision node in the network
+
+Edit.Decision.mnemonic = D
+
+
+
+Edit.Utility.label = Add utility node
+
+Edit.Utility.tip = Add a utility node in the network
+
+Edit.Utility.mnemonic = U
+
+
+
+Edit.Link.label = Add a directed link
+
+Edit.Link.tip = Add a directed link in the network
+
+Edit.Link.mnemonic = L
+
+
+
+Edit.unLink.label = Add an undirected link
+
+Edit.unLink.tip = Add undirected link in the network
+
+Edit.unLink.mnemonic = U
+
+
+Edit.influenceLink.label = Influences
+
+Edit.influenceLink.tip = Show link influences
+
+Edit.influenceLink.mnemonic = F
+
+
+Edit.layout.label = Layout of the nodes in the screen
+
+Edit.layout.tip = Layout of the nodes in the screen
+
+
+
+Edit.ZoomIn.tip = Zoom in
+
+Edit.ZoomIn.mnemonic = I
+
+
+
+Edit.ZoomOut.tip = Zoom out
+
+Edit.ZoomOut.mnemonic = O
+
+
+
+
+
+# Options for the view menu
+
+
+
+View.label = View
+
+View.mnemonic = V
+
+
+
+View.ByName.label = By Name
+
+View.ByName.mnemonic = N
+
+
+
+View.ByTitle.label = By Title
+
+View.ByTitle.mnemonic = T
+
+# ADDED FOR THE VIEW MENU
+
+View.setPrecision.label = Precision
+
+View.setPrecision.mnemonic = P
+
+View.Prec1Item.label = 0.1
+View.Prec2Item.label = 0.01
+View.Prec3Item.label = 0.001
+View.Prec4Item.label = 0.0001
+View.Prec5Item.label = 0.00001
+View.Prec6Item.label = 0.000001
+View.Prec7Item.label = 0.0000001
+View.Prec8Item.label = 0.00000001
+
+
+
+# Options for the options menu
+
+
+
+Options.label = Options
+
+Options.mnemonic = O
+
+
+
+Options.PropagationMethod.label = Propagation Method
+
+Options.PropagationMethod.mnemonic = P
+
+
+
+Options.LearningMethod.label = Learning Method
+
+Options.LearningMethod.mnemonic = L
+
+
+Options.GenerateDBC.label = Generate DBC
+
+Options.GenerateDBC.mnemonic = G
+
+Options.ConstraintsKnowledge.label = Constraints Knowledge
+
+Options.ConstraintsKnowledge.mnemonic = K
+
+
+Options.InferenceOptions.label = Inference Options
+
+Options.InferenceOptions.mnemonic = I
+
+
+Options.ExplanationOptions.label= Explanation Options
+
+Options.InferenceOptions.mnemonic = E
+
+
+# Options for the tasks menu
+
+
+
+Tasks.label = Tasks
+
+Tasks.mnemonic = T
+
+
+
+Tasks.Fusion.label = Fusion
+
+Tasks.Fusion.mnemonic = F
+
+
+
+
+
+# Options for the window menu
+
+
+
+Window.label = Window
+
+Window.mnemonic = W
+
+
+
+Window.Cascade.label = Cascade
+
+Window.Cascade.mnemonic = C
+
+
+
+Window.MinimizeAll.label = Minimize all
+
+Window.MinimizeAll.mnemonic = M
+
+
+
+Window.RestoreAll.label = Restore all
+
+Window.RestoreAll.mnemonic = R
+
+
+
+Window.Next.label = Next
+
+Window.Next.shortcut = E
+
+Window.Next.mnemonic = N
+
+
+
+Window.Previous.label = Previous
+
+Window.Previous.shortcut = R
+
+Window.Previous.mnemonic = P
+
+
+
+Window.Show.label = Show message window
+
+Window.Show.mnemonic = S
+
+
+
+
+
+# Options for the help menu
+
+Help.label = Help
+
+Help.mnemonic = H
+
+
+
+Help.About.label = About...
+
+Help.About.tip = Display program information, version number and copyright
+
+Help.About.mnemonic = A
+
+
+
+
+
+# Options for the working mode
+
+WorkingMode.Edit.label = Edit
+
+WorkingMode.Inference.label = Inference
+
+WorkingMode.Learn.label = Learn
+
+
+
+
+
+# Options for the popup menu
+
+
+
+Popup.NodeProperties.label = Edit node properties ...
+
+Popup.LinkProperties.label = Edit link properties ...
+
+Popup.NetProperties.label = Edit network properties ...
+
+Popup.DeleteNode.label = Delete Node
+
+Popup.DeleteLink.label = Delete Link
+
+Popup.DeleteSelection.label = Delete Selection
+
+Popup.ExplainNode.label = Explain Node
+
+Popup.ExplainLink.label = Explain Link
+
+Popup.ExplainNetwork.label = Explain Network
+
+Popup.ContractNode.label = Contract Node
+
+Popup.ExpandNode.label = Expand Node
+
+Popup.NonSenseConstraints.label = Add Constraint "Variable doesn't make sense"
+
+Popup.addTestDecision.label = Add "Perform Test" decision
+
+Popup.ShowDecisionTables.label = Show optimal policy (table) for this decision
+
+Popup.ShowDecisionPolicyTree.label = Show optimal policy (tree) for this decision
+
+Popup.ShowPosteriorDistributionsTables.label = Show posterior distribution
+
+Popup.ShowUtilitiesTables.label = Show utilities
+
+
+
+# Untitled name
+
+
+
+Untitled.label = Untitled
+
+
+
+# Message window label
+
+
+
+MessageWindow.label = Message Window
+
+
+
+# Undo/Redo actions
+
+
+
+Action.addNode.label = Add node
+
+Action.addLink.label = Add link
+
+Action.delete.label = Delete
+
+Action.move.label = Move
+
+Action.changeNode.label = Node properties edition
+
+Action.changeLink.label = Change link
+
+Action.changeRelation.label = Change relation
+
+Action.cut.label = Cut selection
+
+Action.paste.label = Paste selection
+
+
+
+# Options of the Explanation menus and toolbar's items
+
+Explanation.Threshold.label=ET
+
+Explanation.Threshold.mnemonic=T
+
+
+Explanation.Purpose.label=Purpose
+
+Explanation.Purpose.mnemonic=P
+
+
+Explanation.label = Inference
+
+Explanation.mnemonic = I
+
+
+Explanation.Store.label = Store case
+
+Explanation.Store.tip = Save case in memory
+
+Explanation.Store.mnemonic = S
+
+
+Explanation.Save.label = Save case
+
+Explanation.Save.tip = Save case in a file
+
+Explanation.Save.mnemonic = S
+
+
+Explanation.Propagate.label =Propagate evidence
+
+Explanation.Propagate.tip = Propagates current evidence
+
+Explanation.Propagate.mnemonic = P
+
+
+Explanation.Expand.label = Expand node
+
+Explanation.Expand.tip = Expand node
+
+Explanation.Expand.mnemonic = E
+
+
+
+Explanation.Contract.label = Contract node
+
+Explanation.Contract.tip = Contract the expanded node
+
+Explanation.Contract.mnemonic = C
+
+
+
+Explanation.ExpNode.label = Explain Node
+
+Explanation.ExpLink.label = Explain Link
+
+Explanation.Explain.label = Explain
+
+Explanation.Explain.tip= Explains current evidence case
+
+Explanation.Explain.mnemonic = E
+
+
+
+Explanation.Options.label = Options
+
+Explanation.Options.tip = Options
+
+Explanation.Options.mnemonic = O
+
+
+
+Explanation.First.label = First case
+
+Explanation.First.tip = First case
+
+Explanation.First.mnemonic = F
+
+
+
+Explanation.Previous.label = Previous case
+
+Explanation.Previous.tip = Previous case
+
+Explanation.Previous.mnemonic = P
+
+
+
+Explanation.Next.label = Next case
+
+Explanation.Next.tip = Next case
+
+Explanation.Next.mnemonic = N
+
+
+
+Explanation.Last.label = Last case
+
+Explanation.Last.tip = Last case
+
+Explanation.Last.mnemonic = L
+
+
+
+
+Explanation.Editor.label = Case editor
+
+Explanation.Editor.tip = Case editor
+
+Explanation.Editor.mnemonic = D
+
+
+Explanation.Case.label = Case monitor
+
+Explanation.Case.tip = Case monitor
+
+Explanation.Case.mnemonic = M
+
+
+Explanation.Delete.label = Delete evidence
+
+Explanation.Delete.tip = Delete evidence from the current case
+
+Explanation.Delete.mnemonic = D
+
+Explanation.EmptyCases.label = Empty Cases list
+
+Explanation.EmptyCases.tip = Empty Cases list
+
+Explanation.Delete.mnemonic = E
+
+
+Explanation.Paths.label = Whole network
+
+Explanation.Paths.tip= Shows the whole the network
+
+Explanation.Paths.mnemonic = W
+
+
+SelectVariables=Selecting variables for partial abduction
+NewVar = New variable
+
+OK.label = OK
+Cancel.label = Cancel
+
+Comment = Comment
+Value = Value
+NewFinding = New finding
+DeleteEvidence = Delete Evidence
+Propagate = Propagate
+
+NoCaseStored=There is no case stored. You must enter evidence before
+ActiveCase=Active case is the last stored. You can modify it
+Explanation.Dectree.label=Expand Decision Tree
+
+Explanation.Dectree.tip=Expands Decision Tree
+
+Edit.Constraints.label=Edit IDiagram Constraints
+
+Edit.Constraints.tip=Edits Influence Diagram  Constraints
+
+File.SaveAndReopen.label=Save and Reopen network
+
+Edit.Continuous.label=Inserta Nodo Continuo
+
+Edit.Continuous.tip=Add a continuous node
+
+Edit.Continuous.mnemonic=T
+
+Popup.ExplainFunctionNode.label=Mostrar Funcion Detallada
+
+#Introducido para el analisis de sensibilidad
+Analysis.label = Analysis
+
+Analysis.mnemonic = A
+
+Analysis.SensityvityAnalysis.label = SensitivityAnalysis
+
+Analysis.SensitivityAnalysis.mnemonic = S
+
+Analysis.SensitivityAnalysis.tip = Sensitivity analysis
+
+SensitivityAnalysis.Opciones = Options
+
+SensitivityAnalysis.CargarDiagrama = Load diagram
+
+SensitivityAnalysis.GuardarDiagramaComo = Save diagram as ...
+
+SensitivityAnalysis.GuardarDiagrama = Save diagram
+
+SensitivityAnalysis.Salir = Exit

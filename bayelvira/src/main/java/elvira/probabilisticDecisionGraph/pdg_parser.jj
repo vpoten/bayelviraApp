@@ -1,0 +1,386 @@
+/*pdg_parser.jj*/
+
+options 
+{
+        STATIC = false;
+        LOOKAHEAD=4;
+        FORCE_LA_CHECK=true;
+}
+
+
+PARSER_BEGIN(PDGParse)
+
+//import java.util.Vector;
+//import java.util.Enumeration;
+
+package elvira.probabilisticDecisionGraph;
+
+import elvira.probabilisticDecisionGraph.tools.*;
+import elvira.*;
+import java.io.*;
+import java.util.*;
+
+
+    
+public class PDGParse {
+
+    String Name;
+    String Title;
+    String Comment;
+    public NodeList Nodes,outputNodes; 
+    
+    public static void main(String args[]) throws ParseException, IOException, PDGException {
+        PDG myPDG;
+        FileInputStream f;  
+        //FileWriter f2;
+        f = new FileInputStream(args[0]);
+        PDGParse parser = new PDGParse(f);
+        myPDG = parser.parse();
+        System.out.println("A PDG model was successfully constructed from file '"+args[0]+"'");
+    }
+    
+    
+    private Vector<PDGVariableNode> extractChildren(Map<String, PDGVariableNode> nameToObj, 
+                                                    Vector<String> names,
+                                                    Vector<PDGVariableNode> all_children) throws ParseException {
+        Vector<PDGVariableNode> retval = new Vector<PDGVariableNode>();
+        PDGVariableNode pdgn;
+        for(String name : names){
+            pdgn = nameToObj.get(name);
+            if(pdgn == null){
+                throw new ParseException("Variable name '"+name+"' found in child list, "+
+                                         "but no definition was found!");
+            } else if(all_children.contains(pdgn)){
+                throw new ParseException("Variable '"+name+"' found in multiple child lists!");
+            }
+            all_children.add(pdgn);
+            retval.add(pdgn);
+        }
+        return retval;
+    }
+    
+    PDGParameterNode[] parsePNChildren(PDGParameterNode pn, 
+                                       PDGVariableNode successor) throws ParseException {
+        PDGParameterNode[] childrenNodes = new PDGParameterNode[pn.getValues().length];
+        PDGParameterNode chNode;
+        Vector<Integer> childIds;
+        childIds=parseIntegerList();
+        if(childIds.size() != childrenNodes.length){
+            throw new ParseException("Read '"+childIds.size()
+                                     +"' children for PDGParameterNode '"+pn.id
+                                     +"', it needs '"+childrenNodes.length+"'");
+        }
+        for(int i=0;i<childIds.size();i++){
+            chNode = successor.getPNodeById(childIds.elementAt(i));
+            if(chNode==null){
+                throw new ParseException("Did not find PDGParameterNode with id '"+childIds.elementAt(i)
+                                        +"' in variable node '"+successor.getName()
+                                        +"' - it is listed as child of PDGParameterNode '"+pn.id+"'");
+            }
+            childrenNodes[i] = chNode;
+        }
+        return childrenNodes;
+    }
+}
+PARSER_END(PDGParse)
+
+
+SKIP: { <" "|"\t"|"\n"|"\r"> }
+SKIP: { <"//" (~["\n","\r"])* ("\n"|"\r\n")> }
+SKIP: { <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/"> }
+
+
+TOKEN : { <PDG: "pdg"> }
+TOKEN : { <NODE: "node"> }
+TOKEN : { <PNODE: "pnode"> }
+
+TOKEN : { <TITLE: "title"> }
+TOKEN : { <NAME: "name"> }
+TOKEN : { <STATES: "states"> }
+TOKEN : { <ID: "id"> }
+TOKEN : { <VALUES: "values"> }
+TOKEN : { <TABLE: "table"> }
+TOKEN : { <STRUCTURE: "structure"> }
+
+TOKEN : { <NODE_TYPE: "finite-states">}
+
+TOKEN : { <OPEN_PAREN: "("> }
+TOKEN : { <CLOSE_PAREN: ")"> }
+TOKEN : { <OPEN_CURLY: "{"> }
+TOKEN : { <CLOSE_CURLY: "}"> }
+TOKEN : { <COMMA: ","> }
+
+TOKEN : { <WORD: <LETTER>(<LETTER>|<DIGIT>)*> } 
+
+TOKEN : { <INTEGER: (<SIGN>)?(<DIGIT>)+> }
+
+TOKEN : { <FLOAT: ("+"|"-")? (((<DIGIT>)+)|
+                              ((<DIGIT>)+"."(<DIGIT>)*)|
+                              ((<DIGIT>)*"."(<DIGIT>)+)) 
+                              (("E"|"e")<INTEGER>)?>}
+
+TOKEN : { <EQUAL: "="> }
+TOKEN : { <STRINGDECIMAL : "\""<INTEGER>"\""> }
+TOKEN : { <STRING : "\""(~["\""])*"\""> }
+TOKEN : { <ARC : "->"> }
+
+TOKEN : { <#LETTER : ["a"-"z","A"-"Z","_","-"]> }
+TOKEN : { <#DIGIT : ["0"-"9"]> }
+TOKEN : { <#SIGN : ["+","-"]>}
+
+PDG parse() throws PDGException:
+{
+    Token t;
+    PDGVariableNode var;
+    HashMap<String, PDGVariableNode> vars=new HashMap<String, PDGVariableNode>();
+    Vector<PDGVariableNode> forest;
+    String name;
+}
+{
+        <PDG>
+        t=<STRING>
+        { name=t.image.substring(1,t.image.length()-1); }
+        <OPEN_CURLY>
+        (
+         var=parseVariable() 
+         { vars.put(var.getName(), var); }
+         )*
+        forest=parseStructure(vars)
+        <CLOSE_CURLY>
+        <EOF>
+        {return new PDG(forest, name);}
+}
+
+private PDGVariableNode parseVariable() throws PDGException:
+{
+        Token t;
+        FiniteStates var = new FiniteStates();
+        Vector s;
+        PDGVariableNode pdgVarNode;
+}
+{
+        <NODE>
+        t=<WORD>
+        { var.setName(t.image); }
+        <OPEN_PAREN>
+        t=<NODE_TYPE>
+        { var.setTypeOfVariable(t.image); }
+        <CLOSE_PAREN><OPEN_CURLY>
+        (
+        <TITLE><EQUAL>
+        t=<STRING>";"
+        { var.setTitle(t.image.substring(1,t.image.length()-1)); }
+        )?
+        <STATES><EQUAL>
+        s=parseStates()
+        { var.setStates(s); }
+        ";"        
+        { pdgVarNode = new PDGVariableNode(var); }
+        parsePNodes(pdgVarNode)
+        <CLOSE_CURLY>
+        { return pdgVarNode; }
+}
+
+private Vector<PDGVariableNode> parseStructure(Map<String, PDGVariableNode> nameToVar) throws ParseException, PDGException:
+{ 
+  Token t;
+  Vector<String> schildren;
+  PDGVariableNode pdgvn;
+  Vector<PDGVariableNode> is_parent = new Vector<PDGVariableNode>();
+  Vector<PDGVariableNode> is_child = new Vector<PDGVariableNode>();
+  Vector<PDGVariableNode> nchildren;
+}
+{
+        <STRUCTURE><OPEN_CURLY>
+        (
+        t=<WORD>
+        <ARC>
+        schildren=parseWordList()
+            { 
+                pdgvn=nameToVar.get(t.image);
+                if(pdgvn==null){
+                    throw new ParseException("Found variable name '"+t.image+
+                                             "' in structure definition, but no definition of that "+
+                                             "variable was found!");
+                }
+                if(is_parent.contains(pdgvn)){
+                    throw new ParseException("Multiple parent defenitions of variable '"+t.image+
+                                             "', only one is allowed!");
+                }
+                is_parent.add(pdgvn);
+                nchildren=extractChildren(nameToVar, schildren, is_child); 
+                pdgvn.addSuccessors(nchildren);
+            }
+        
+        parsePNStructure(pdgvn)
+        )*
+        <CLOSE_CURLY>
+       {
+           Vector<PDGVariableNode> roots = new Vector<PDGVariableNode>();
+           for(PDGVariableNode pn : is_parent){
+               if(!is_child.contains(pn)) roots.add(pn);
+           }
+           return roots;
+       }
+}
+
+private Vector<String> parseWordList():
+{
+    Token t;
+    Vector<String> names = new Vector<String>();
+}
+{
+        <OPEN_PAREN>(t=<WORD> { names.add(t.image); })*<CLOSE_PAREN>
+        { return names;}
+}
+
+Vector<Integer> parseIntegerList():
+{
+    Token t;
+    Vector<Integer> retval = new Vector<Integer>();
+}
+{       
+        <OPEN_PAREN>
+        (
+         t=<INTEGER>
+            { retval.add(Integer.parseInt(t.image)); }
+         )*
+        <CLOSE_PAREN>
+       { return retval;}
+}
+
+private Vector<String> parseStates():
+{ 
+  Token t;
+  Vector<String> retval=new Vector<String>(); 
+}
+{
+        <OPEN_PAREN>(
+        t=<STRING>
+        { retval.add(t.image.substring(1,t.image.length()-1)); }
+        )*
+        <CLOSE_PAREN>
+        { return retval; }
+}
+
+private void parsePNodes(PDGVariableNode var) throws ParseException, PDGException :
+{
+        Token t;
+        PDGParameterNode pdgn;
+        Vector<PDGParameterNode> parameterNodeVector = new Vector<PDGParameterNode>();
+        double[] vals;
+        int id;
+}
+{
+        (
+         <PNODE><OPEN_CURLY>
+        <ID><EQUAL>
+        t=<INTEGER>
+        { 
+            id = Integer.parseInt(t.image); 
+            vals=new double[var.getNumStates()];
+        }
+        ";"
+        <VALUES><EQUAL>
+        parseFloatTable(vals)
+        ";"
+        <CLOSE_CURLY>
+        { 
+        pdgn = new PDGParameterNode(var); 
+        pdgn.id = id;
+        pdgn.setValues(vals); 
+        }
+        )+
+}
+
+private void parsePNStructure(PDGVariableNode var) throws ParseException, PDGException :
+{
+    Token t;
+    Vector<PDGVariableNode> succs=var.getSuccessors();
+    int id, i;
+    Vector<PDGParameterNode> nodes=new Vector<PDGParameterNode>(var.getParameterNodesCopy());
+    PDGParameterNode pnode;
+    Vector<Integer> childIds;
+    PDGParameterNode[][] children;
+    PDGParameterNode[] childrenColumn;
+    PDGParameterNode child;
+    int successorIndex;
+}
+{
+<OPEN_CURLY>
+     (t=<INTEGER>
+         { 
+             id=Integer.parseInt(t.image);
+             pnode=var.getPNodeById(id);
+             if(pnode==null){
+                 throw new ParseException("PDGParameterNode with id '"+id+"'"+
+                                       " not found in PDGVariableNode '"+var.getName()+"'"+
+                                       " but it appears in structure definition!");
+             }
+             if(!nodes.remove(pnode)){
+                 throw new ParseException("Found multible definitions of children for PDGParameterNode '"+id+"'!");
+             }
+             children = new PDGParameterNode[var.getSuccessors().size()][var.getNumStates()];
+         }
+      <ARC>
+         { 
+             successorIndex=0; 
+         }
+      (<OPEN_PAREN>
+       { childIds = new Vector<Integer>(); }
+       (
+      t=<INTEGER>
+      { 
+          childIds.add(Integer.parseInt(t.image));
+      }
+      )+
+       <CLOSE_PAREN>
+      {
+          childrenColumn = new PDGParameterNode[pnode.getValues().length];
+          if(childrenColumn.length != childIds.size()){
+              throw new ParseException("Incorrect number of children for PDGParameterNode id '"
+                                       +pnode.id+"', found '"+childIds.size()+"' but need '"+
+                                       childrenColumn.length+"'");
+          }
+          i=0;
+          PDGVariableNode y = succs.elementAt(successorIndex);
+          for(Integer childId : childIds){
+              child = y.getPNodeById(childId);
+              if(childId == null){
+                  throw new ParseException("Could not find PDGParameterNode with id '"+childId
+                                           +"' in PDGVariableNode '"+y.getName()+"'");
+              }
+              childrenColumn[i++]=child;
+          }
+          children[successorIndex]=childrenColumn;
+          successorIndex++;
+      }
+       )+
+      ";"
+         { 
+             if(successorIndex != children.length){
+                 throw new ParseException("Found '"+successorIndex+
+                                          "' sets of children for PDGParameterNode '"+
+                                          pnode.id+"', need '"+children.length+"'");
+             }
+             pnode.unsafeSetAllChildren(children); 
+         }
+      )+
+<CLOSE_CURLY>
+}
+
+
+
+private void parseFloatTable(double[] vals):
+{ 
+  int i=0;
+  Token t;
+}
+{
+        <TABLE><OPEN_PAREN>
+        (
+        t=<FLOAT>
+        { vals[i]=Double.parseDouble(t.image); i++; }
+        )*<CLOSE_PAREN>
+        { if(i<vals.length) throw new ParseException("too few values for PDGParameterNode!");}
+}

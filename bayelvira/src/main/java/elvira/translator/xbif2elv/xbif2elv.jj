@@ -1,0 +1,282 @@
+options 
+{
+        STATIC = false;
+        IGNORE_CASE=true;
+        LOOKAHEAD=4;
+        FORCE_LA_CHECK=true;
+}
+
+PARSER_BEGIN(XBif2ElvParse)
+
+package elvira.translator.xbif2elv;
+
+import java.util.Vector;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import elvira.Node;
+import elvira.NodeList;
+import elvira.FiniteStates;
+import elvira.Continuous;
+import elvira.Configuration;
+import elvira.Evidence;
+import elvira.potential.*;
+import elvira.Relation;
+import elvira.Link;
+import elvira.LinkList;
+import elvira.Bnet;
+import java.io.*;
+    
+public class XBif2ElvParse {
+   public String Type; 
+   public String Name;
+   public String Title;
+   public String Comment;
+   public String Author;
+   public String WhoChanged;
+   public String WhenChanged;
+   public String version;
+   public boolean locked;
+   public Hashtable NodeDefaultProperties;
+   public Hashtable RelationDefaultProperties;
+   public Vector Consistency;
+   public NodeList Nodes;
+   public LinkList Links;
+   public Vector Relations;
+   public FiniteStates DefaultFinite;
+   public Continuous DefaultContinuous;
+   public Relation DefaultRelation;
+   public Link DefaultLink;
+   public int defaultnodetype;
+   public boolean statesdecl;
+   public Evidence ConfigEvidence;
+ 
+   public static void main(String args[]) throws ParseException,IOException {
+   
+      Bnet b;
+      FileInputStream networkFile;
+      FileWriter networkOutputFile;
+   
+      if (args.length<2)
+         System.out.println("Too few arguments. Arguments are: XBifFile ElviraNetworkFile");
+      else {
+         networkFile = new FileInputStream(args[0]);
+         XBif2ElvParse parser = new XBif2ElvParse(networkFile);
+         parser.initialize();
+         parser.CompilationUnit();
+         b=new Bnet();
+         b.translate(parser);
+         networkOutputFile= new FileWriter(args[1]);
+         b.saveBnet(networkOutputFile);
+         //The name of the evidende file will be: <network_name> + ".evi"
+         parser.saveEvidence(args[1]);
+      }
+   }
+
+   public void initialize() {
+   
+      String DefaultStates[]= {"absent","present"};
+      Name =  new String("");
+      Title =  new String("");
+      Comment =  new String("");
+      Author =  new String("");
+      WhoChanged =  new String("");
+      WhenChanged =  new String("");
+      version =  new String("1.0");
+      Consistency = new Vector();
+      Nodes = new NodeList();
+      Links = new LinkList();
+      Relations = new Vector();
+      DefaultFinite = new FiniteStates("Default",DefaultStates);
+      DefaultContinuous = new Continuous();
+      DefaultContinuous.setTitle("");
+      DefaultContinuous.setComment("");
+      DefaultRelation = new Relation();
+      DefaultRelation.setKind(Relation.CONDITIONAL_PROB);
+      DefaultFinite.setTitle("");
+      DefaultFinite.setComment("");
+      DefaultLink = new Link(true);
+      defaultnodetype=1;
+      Type=new String("xbif");
+      ConfigEvidence= new Evidence();
+   }
+}
+
+PARSER_END(XBif2ElvParse)
+
+SKIP: { <" "|"\t"|"\n"|"\r"|"\r\n" | ">" |"</"  > }
+SKIP: { <"//" (~["\n","\r"])* ("\n"|"\r\n")> }
+SKIP: { <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/"> }
+SKIP: { <"<!--" ( ~["-"] | ( "-" ~["-"] ) )* "-->"> }
+
+TOKEN: { <VERSION: "version"> }
+TOKEN: { <EQUAL: "=" > }
+TOKEN: { <TYPE: "type" > }
+TOKEN: { <XBIF: "<xbif " <VERSION> <EQUAL><STRING>">"> | <XBIF_END: "</xbif>"> }
+TOKEN: { <NETWORK: "<network>"> | <NETWORK_END: "</network>"> }
+TOKEN: { <NAME: "<name>"> | <NAME_END: "</name>"> }
+TOKEN: { <VARIABLE: "<variable " <TYPE><EQUAL>(<STRING>)+">"> | <VARIABLE_END: "</variable>" > } 
+TOKEN: { <VALUES: "<values>"> | <VALUES_END: "</values>" > }
+TOKEN: { <OBSERVED: "<observed>">  | <OBSERVED_END: "</observed>" > }
+TOKEN: { <PROBABILITY: "<probability>"> | <PROBABILITY_END: "</probability>" > }
+TOKEN: { <FOR: "<for>"> | <FOR_END: "</for>" > }
+TOKEN: { <GIVEN: "<given>"> | <GIVEN_END: "</given>" > }
+TOKEN: { <TABLE: "<table>"> | <TABLE_END: "</table>" > }
+
+
+TOKEN:
+{
+<FLOATSCI: ("+"|"-")?
+    (<DIGIT>)+("."(<DIGIT>)*)? 
+   ("E"|"e")("+"|"-")(<DIGIT>)+>
+}
+
+TOKEN:
+{<FLOAT: ("+"|"-")?
+    (((<DIGIT>)+"."(<DIGIT>)*)|("."(<DIGIT>)+))> 
+}
+
+
+TOKEN: { <WORD: (~["\"","<",">","/", " " , "," , "{","}","\t","\n","[","]","(",")","=",";","|"])*
+       <LETTER>(~["\"","<",">","/", " " , "," ,"{","}","\t","\n","[","]","(",")","=",";","|"])*>
+       |
+       <#LETTER: ["a"-"z","A"-"Z","_"]>
+       |
+       <#DIGIT: ["0"-"9"]> }
+
+TOKEN: { <STRINGDECIMAL: "\""<DECIMAL_LITERAL>"\""> }
+TOKEN: { <STRING: "\""(~["\""])*"\""> }
+TOKEN: { <DECIMAL_LITERAL: ((<DIGIT>)+)> }
+
+
+void CompilationUnit():
+{Token t;}
+{ 
+  xbifDeclaration()
+  <EOF>
+}
+
+void xbifDeclaration():
+{}
+{
+<XBIF>
+networkDeclaration()
+(<XBIF_END>)
+}
+
+void networkDeclaration(): 
+{Token T;}
+{
+   <NETWORK>
+   <NAME>(T=<WORD>)+ <NAME_END>
+      {Name = new String(T.image);}
+      (variableDeclaration())+
+      (probabilityDeclaration())+
+   <NETWORK_END>
+}
+
+
+void variableDeclaration():
+{
+   Token T;
+   Node N=null;
+   Token numStates;
+   int observedState=0;
+}
+{  
+   <VARIABLE>
+   <NAME>((T=<WORD>)+) <NAME_END>
+   <VALUES>
+   (numStates=<DECIMAL_LITERAL>)
+   {
+      int statesSize=new Integer(numStates.image.toString());
+      String states[] = new String[statesSize];
+      for (int i=0;i<statesSize;i++)
+            states[i]="s"+i;
+      N = new FiniteStates(T.image, states);
+      Nodes.insertNode(N);
+   }
+   <VALUES_END>
+      (
+      observedState=observedDeclaration()
+      {ConfigEvidence.insert((FiniteStates)N,observedState);} 
+      )*
+   <VARIABLE_END>
+}
+
+private int observedDeclaration():
+{Token T;}
+{
+   <OBSERVED>
+      (T=<DECIMAL_LITERAL>)
+   <OBSERVED_END>
+   {return new Integer(T.image.toString()).intValue();}
+}
+
+void probabilityDeclaration():
+{
+   Token child,parent, prob;
+   Relation R;
+   Vector nameR=new Vector();
+   int i=0;
+}
+{
+   <PROBABILITY>
+   {R = DefaultRelation.copy();}
+   <FOR>(child=<WORD>)<FOR_END>
+      {nameR.addElement(child.toString());}
+   (<GIVEN>
+   (parent=<WORD>)
+   {
+      nameR.addElement(parent.toString());
+      Link L=null;
+      L = new Link(true);       
+      L.setTail(Nodes.getNode((String)parent.image));
+      L.setHead(Nodes.getNode((String)child.image));
+      Links.insertLink(L);
+   }
+   <GIVEN_END>)*
+   {
+      R.setVariablesFromNames(nameR,Nodes);
+      PotentialTable potTable = new PotentialTable(R.getVariables());
+   }
+   <TABLE>
+   {
+      long size= potTable.getSize();
+      double probs[] =new double[(int)size];
+      int numrows=(int)size/((FiniteStates)Nodes.getNode((String)child.image)).getNumStates();
+      int numcols=((FiniteStates)Nodes.getNode((String)child.image)).getNumStates();;
+   }
+   ((prob=<FLOAT>) | (prob=<FLOATSCI>)
+   {
+      probs[i/numcols+(numrows*(i%numcols))]=new Double(prob.image.toString()).doubleValue();
+      i++;
+   }
+   )+
+   <TABLE_END>
+   {
+      potTable.setValues(probs);   
+      R.setValues(potTable);
+      Relations.addElement(R);
+   }
+   <PROBABILITY_END>
+}
+
+void saveEvidence(String nameFile):
+{  
+   Evidence evid;
+   FileWriter evidenceFile;
+}
+{
+   {
+      evid=new Evidence(ConfigEvidence); 
+      evid.setName(Name);
+      evid.setTitle(Name);
+      try{
+         evidenceFile = new FileWriter(nameFile +".evi");
+         evid.save(evidenceFile);
+         evidenceFile.close();
+      }
+      catch(Exception e){System.out.println("Problems saving the evidence");}
+    }
+}
+

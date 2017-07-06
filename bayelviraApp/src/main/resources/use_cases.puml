@@ -1,0 +1,9 @@
+@startuml
+
+:User:
+User -> (Import DB)
+User --> (Edit Bayes Net)
+(Edit Bayes Net) <|-- (Delete Node)
+(Edit Bayes Net) <|-- (Delete Edge)
+
+@enduml

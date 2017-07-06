@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <!-- 
+        For NetBeans. How to create a cytoscape plugin app using Archetype Catalog:
+        1 - copy cytoscape archetype-catalog.xml file into maven local dir: ~/.m2/
+        2 - search in archetype-catalog.xml the entry "cyaction-app" (desired version) and add the following:
+            <repository>http://code.cytoscape.org/nexus/service/local/repositories/snapshots/content</repository>
+        3 - Follow steps in "Create a Bundle App Using IDE" from cytoscape wiki to create the project.
+    -->
+    
+    <properties>
+        <bundle.symbolicName>org.cytoscape.bayelviraApp</bundle.symbolicName>
+        <bundle.namespace>org.cytoscape.bayelviraapp</bundle.namespace>
+    </properties>
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.cytoscape</groupId>
+    <artifactId>bayelviraApp</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>bayelviraApp</name>
+    <description>Create bayesian networks using pattern databases</description>
+
+    <packaging>bundle</packaging>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+        <!-- Cytoscape requires Java 1.6 -->
+        <plugins>
+            <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.3.2</version>
+                    <executions>
+                            <execution>
+                                    <id>default-testCompile</id>
+                                    <phase>test-compile</phase>
+                                    <goals>
+                                            <goal>testCompile</goal>
+                                    </goals>
+                            </execution>
+                            <execution>
+                                    <id>default-compile</id>
+                                    <phase>compile</phase>
+                                    <goals>
+                                            <goal>compile</goal>
+                                    </goals>
+                            </execution>
+                    </executions>
+                    <configuration>
+                            <source>1.6</source>
+                            <target>1.6</target>
+                            <optimize>true</optimize>
+                            <showWarnings>true</showWarnings>
+                            <showDeprecation>true</showDeprecation>
+                            <compilerArguments>
+                                    <Xmaxwarns>10000</Xmaxwarns>
+                                    <Xmaxerrs>10000</Xmaxerrs>
+                            </compilerArguments>
+                    </configuration>
+            </plugin>
+            <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.7.1</version>
+                    <configuration>
+                            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    </configuration>
+            </plugin>
+            <!-- Generates the OSGi metadata based on the osgi.bnd file. -->
+            <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>2.3.7</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <instructions>
+                            <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
+                            <Bundle-Version>${project.version}</Bundle-Version>
+                            <Export-Package>${bundle.namespace}</Export-Package>
+                            <Private-Package>${bundle.namespace}.internal.*</Private-Package>
+                            <Bundle-Activator>${bundle.namespace}.internal.CyActivator</Bundle-Activator>
+                            <Embed-Transitive>true</Embed-Transitive>
+                            <Embed-Dependency>*;scope=compile|runtime;inline=false;groupId=!org.cytoscape|org.osgi</Embed-Dependency>
+                        </instructions>
+                    </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Links to the Cytoscape Maven repositories. -->
+    <repositories>
+        <repository>
+            <id>cytoscape_snapshots</id>
+            <snapshots>
+            </snapshots>
+            <releases>
+                    <enabled>false</enabled>
+            </releases>
+            <name>Cytoscape Snapshots</name>
+            <url>http://code.cytoscape.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>cytoscape_releases</id>
+            <snapshots>
+                    <enabled>false</enabled>
+            </snapshots>
+            <releases>
+            </releases>
+            <name>Cytoscape Releases</name>
+            <url>http://code.cytoscape.org/nexus/content/repositories/releases/</url>
+        </repository>
+    </repositories>
+
+    <!-- Dependencies needed to compile this project. -->
+    <dependencies>
+        <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>org.osgi.core</artifactId>
+                <version>4.2.0</version>
+        </dependency>
+
+        <dependency>
+                <groupId>org.cytoscape</groupId>
+                <artifactId>service-api</artifactId>
+                <version>3.0.1</version>
+        </dependency>
+        <dependency>
+                <groupId>org.cytoscape</groupId>
+                <artifactId>swing-application-api</artifactId>
+                <version>3.0.1</version>
+        </dependency>
+        <dependency>
+                <groupId>org.cytoscape</groupId>
+                <artifactId>session-api</artifactId>
+                <version>3.0.1</version>
+        </dependency>
+        <dependency>
+                <groupId>org.cytoscape</groupId>
+                <artifactId>work-swing-api</artifactId>
+                <version>3.0.1</version>
+        </dependency>
+        <dependency>
+                <groupId>org.cytoscape</groupId>
+                <artifactId>core-task-api</artifactId>
+                <version>3.0.1</version>
+        </dependency>
+        <dependency>
+                <groupId>org.cytoscape</groupId>
+                <artifactId>io-api</artifactId>
+                <version>3.0.1</version>
+        </dependency>
+        <dependency>
+                <groupId>org.cytoscape</groupId>
+                <artifactId>layout-api</artifactId>
+                <version>3.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.cytoscape</groupId>
+            <artifactId>vizmap-api</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        
+        <!-- cytoscape test dependencies -->
+        <dependency>
+                <groupId>org.cytoscape</groupId>
+                <artifactId>model-impl</artifactId>
+                <version>3.0.1</version>
+                <scope>test</scope>
+        </dependency>
+        <dependency>
+                <groupId>org.cytoscape</groupId>
+                <artifactId>model-impl</artifactId>
+                <version>3.0.1</version>
+                <scope>test</scope>
+                <type>test-jar</type>
+        </dependency>
+        <dependency>
+                <groupId>org.cytoscape</groupId>
+                <artifactId>event-api</artifactId>
+                <version>3.0.1</version>
+                <classifier>tests</classifier>
+                <scope>test</scope>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+                <groupId>org.ops4j.pax.logging</groupId>
+                <artifactId>pax-logging-api</artifactId>
+                <version>1.5.2</version>
+                <scope>provided</scope>
+        </dependency>
+        
+        <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>1.6.6</version>
+                <scope>provided</scope>
+        </dependency>
+        <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>1.6.6</version>
+                <scope>provided</scope>
+        </dependency>
+        
+        <!-- bayelvira -->
+        <dependency>
+                <groupId>es.ugr</groupId>
+                <artifactId>bayelvira</artifactId>
+                <version>1.0-SNAPSHOT</version>
+        </dependency>
+        
+        <!-- javacsv -->
+        <dependency>
+                <groupId>net.sourceforge.javacsv</groupId>
+                <artifactId>javacsv</artifactId>
+                <version>2.0</version>
+        </dependency>
+        
+        <!-- weka -->
+        <dependency>
+            <groupId>nz.ac.waikato.cms.weka</groupId>
+            <artifactId>weka-stable</artifactId>
+            <version>3.6.9</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>1.9.2</version>
+        </dependency>
+        
+        <!-- junit test -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>
